@@ -1,0 +1,3 @@
+# Worker node setup
+
+todo
