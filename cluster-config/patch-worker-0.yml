@@ -1,0 +1,10 @@
+machine:
+  install:
+    $patch: delete
+machine:
+  network:
+    hostname: worker-0
+  install:
+    diskSelector:
+      model: WDC*
+    wipe: true
