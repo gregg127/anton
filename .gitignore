@@ -1,1 +1,5 @@
 # gitignore
+cluster-config/secrets.yaml
+cluster-config/controlplane.yaml
+cluster-config/worker.yaml
+cluster-config/talosconfig
