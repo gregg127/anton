@@ -1,4 +1,5 @@
 # gitignore
 cluster-config/patches/secrets.yaml
-cluster-config/rendered
+cluster-config/rendered/*
+!cluster-config/rendered/README.txt
 .DS_Store

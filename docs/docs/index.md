@@ -1,18 +1,25 @@
-# General info
+# Introduction
 
 Anton is a cluster of servers managed with Kubernetes, serving as my homelab. The name was inspired by the ‘Silicon Valley’ series.
-This documentation is a guide how I setup the homelab and what services I have put on it.
+This site is a journal/documentation/step by step guide how I setup the homelab and what services I have put on it.
+The goal of this documentation is to show steps that I went through while saving some of the most important commands etc. so 
+that I can reproduce any given step if something goes wrong.
 
-## Anton specs
+## Anton nodes specs
 
-Swipe the table to the right to see more details.
+The table below represents servers that are part of the cluster. Swipe the table to the right to see more details. 
 
-| **Machine Name** | **Role(s)**                          | **RAM** | **Storage** | **CPU**                          | **Model**              | **Notes**                              |
-| ---------------- | ------------------------------------ | ------- | ----------- | -------------------------------- | ---------------------- | -------------------------------------- |
-| **anton**        | k3s server (master) + agent (worker) | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | HP ProDesk 600 G3 Mini | Control plane + runs workloads         |
-| **worker-0**     | k3s agent (worker)                   | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | HP ProDesk 600 G3 Mini | Worker node, use for heavy workloads   |
-| **worker-1**     | k3s agent (worker)                   | 8 GB    | 512 GB HDD  | Intel i3-6100T, 3.20GHz, 2 cores | HP ProDesk 600 G3 Mini | Worker node, ideal for light workloads |
+| **Machine Name** | **Role(s)**   | **Model**              | **RAM** | **Storage** | **CPU**                          | **Graphics**          | **Idle PC** |
+| ---------------- | ------------- | ---------------------- | ------- | ----------- | -------------------------------- | --------------------- | ----------- |
+| **overlord**     | control plane | HP ProDesk 600 G3 Mini | 8 GB    | 512 GB HDD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
+| **worker-0**     | worker        | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
+| **worker-1**     | worker        | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
 
 ## Kubernetes
 
-I am using k3s ([https://k3s.io](https://k3s.io)) Kubernetes distribution due to its simplicity in configuration.
+I decided to go with Talos Linux as an operating system for all the machines. I made this decision due to several factors:
+
+* Talos's sole purpose is to be in Kubernetes cluster, no need to install additional software 
+* very minimal and lightweight, which is a good alternative to having Ubuntu installed on the machine
+* secure, which is important for me because some day I might allow external traffic to the cluster so that I could use it outside my local network
+* liked by the devops community and youtubers that have experience in setting up Kubernetes clusters

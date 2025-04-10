@@ -1,0 +1,10 @@
+machine:
+  install:
+    $patch: delete
+machine:
+  network:
+    hostname: worker1
+  install:
+    diskSelector:
+      model: SAM*
+    wipe: true
