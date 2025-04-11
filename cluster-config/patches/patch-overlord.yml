@@ -8,3 +8,5 @@ machine:
     diskSelector:
       model: WDC*
     wipe: true
+cluster:
+  allowSchedulingOnControlPlanes: true

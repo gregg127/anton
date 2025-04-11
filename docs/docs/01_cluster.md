@@ -147,6 +147,8 @@ in `/cluster-config/patches` for the worker and change **WORKER_IP** and **WORKE
 
 At this point I have 3 machines in my cluster - control plane and two workers. Everything is setup and ready to serve services.
 
+Revision summarizing work done in this chapter: `938602404874b8de4c741ecd7a9a3e89d5bd19ec`
+
 Sources:
 
 * [https://www.talos.dev/v1.9/introduction/getting-started/](https://www.talos.dev/v1.9/introduction/getting-started/)

@@ -9,11 +9,11 @@ that I can reproduce any given step if something goes wrong.
 
 The table below represents servers that are part of the cluster. Swipe the table to the right to see more details. 
 
-| **Machine Name** | **Role(s)**   | **Model**              | **RAM** | **Storage** | **CPU**                          | **Graphics**          | **Idle PC** |
-| ---------------- | ------------- | ---------------------- | ------- | ----------- | -------------------------------- | --------------------- | ----------- |
-| **overlord**     | control plane | HP ProDesk 600 G3 Mini | 8 GB    | 512 GB HDD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
-| **worker-0**     | worker        | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
-| **worker-1**     | worker        | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
+| **Machine Name** | **Role(s)**           | **Model**              | **RAM** | **Storage** | **CPU**                          | **Graphics**          | **Idle PC** |
+| ---------------- | --------------------- | ---------------------- | ------- | ----------- | -------------------------------- | --------------------- | ----------- |
+| **overlord**     | control plane, worker | HP ProDesk 600 G3 Mini | 8 GB    | 512 GB HDD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
+| **worker-0**     | worker                | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
+| **worker-1**     | worker                | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
 
 ## Kubernetes
 

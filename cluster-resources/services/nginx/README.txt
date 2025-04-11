@@ -1,0 +1,1 @@
+This directory contains my services that are deployed in the default namespace.
