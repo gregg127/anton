@@ -159,6 +159,38 @@ nginx-7f7fc686d9-c4grf   1/1     Running   0          2m23s   10.244.1.47   work
 %
 ```
 
+## DNS
+
+The problem at this point is that I have to communicate with cluster by the IP address of control plane. Cluster should be accessible by some domain name, lets say `anton.golebiowski.dev`.
+
+### Domain configuration for development
+
+Temporary solution is to add entry in `/etc/hosts` with domain that points to the IP address of the cluster:
+```bash
+172.16.0.100 anton.golebiowski.dev
+```
+This will enable communication with cluster by the domain name only from machine that contains this entry. Also appriopriate host entry must be added to `Ingress`.
+
+### Dynamic DNS
+
+To be able to communicate with the cluster outside local network I have to make my local network public and point domain to my IP address. There is another problem - I have changing IP address. So in order to make this work I need to configure dynamic DNS entry both on the domain provider side and on my local network router. To achieve that I need to:
+
+* buy domain (eg. `golebiowski.dev`)
+* configure Dynamic DNS
+    * at the domain provider configuration panel I need to add credentials for the subdomain that will be used as dynamic DNS entry
+    * at the domain provider configuration panel I need to create dynamic DNS entry with subdomain `anton.golebiowski.dev`
+    * on my router I need to configure dynamic DNS with previously generated credentials, so that changed IP address can be announced and updated on the provider side
+* configure my router to accept connections from the Internet on ports `80` and `443` and route it to my cluster's control plane. **This can be disabled at any moment**.
+
+
+The options above address only domain name resolution problem. Now it's time to deal with certificates to ensure safe communication.
+
+## Certification
+
+TODO
+
+-----
+
 Sources:
 
 * [https://hub.docker.com/r/nginxinc/nginx-unprivileged](https://hub.docker.com/r/nginxinc/nginx-unprivileged)
