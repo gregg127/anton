@@ -1,10 +1,10 @@
 # Cluster setup
 
 **Talos Linux v1.9.5** will be used as an OS on all nodes. Before installing Talos on the machines make sure to install **talosctl** and **kubectl** on your laptop/PC:
-```bash
+```console
 brew install siderolabs/tap/talosctl
 ```
-```bash
+```console
 brew install kubernetes-cli
 ```
 and prepare USB drive with *bare-metal* Talos ISO image.
@@ -12,7 +12,7 @@ and prepare USB drive with *bare-metal* Talos ISO image.
 ## Configuration patches
 
 Before setting up control plane and workers we need to prepare basic configuration patches for Talos. These consist of file with secrets and patches for nodes. To generate secret bundle file:
-```bash
+```console
 talosctl gen secrets -o secrets.yaml
 ```
 Apart from that repository contains patches:
@@ -35,11 +35,11 @@ To set up a server node, the following steps need to be followed:
 4. boot from USB drive and wait for Talos to start and be in **READY** state
 5. with Talos started its time to setup master node and cluster:
     1. save IP address to a variable (accessible from Talos dashboard):
-    ```bash
+    ```console
     export MASTER_IP=172.16.0.100
     ```
     2. generate control plane and Talos configuration using secrets and patch:
-    ```bash
+    ```console
     talosctl gen config \
     --with-secrets patches/secrets.yaml \
     --config-patch-control-plane @patches/patch-overlord.yml \
@@ -48,7 +48,7 @@ To set up a server node, the following steps need to be followed:
     anton https://$MASTER_IP:6443
     ```
     3. apply the configuration to the machine (this step will trigger Talos installation to disk):
-    ```bash
+    ```console
     talosctl apply-config --insecure \
     --nodes $MASTER_IP \
     --file rendered/controlplane.yaml
@@ -57,7 +57,7 @@ To set up a server node, the following steps need to be followed:
     5. shutdown the machine, unplug USB drive and start it again
     6. wait for Talos to boot (this may take up to 10 minutes or even more)
     7. having Talos started, setup Kubernetes:
-    ```bash
+    ```console
     talosctl bootstrap \
     --nodes $MASTER_IP \
     --endpoints $MASTER_IP \
@@ -65,28 +65,28 @@ To set up a server node, the following steps need to be followed:
     ```
     8. wait until all checkboxes under *controlplane* will be healthy and **READY** state will be true
     9.  make sure everything works fine
-    ```bash
+    ```console
     talosctl health \
     --nodes $MASTER_IP \
     --endpoints $MASTER_IP \
     --talosconfig=rendered/talosconfig
     ```
     10. setup kubectl configuration:
-    ```bash
+    ```console
     talosctl kubeconfig \
     --nodes $MASTER_IP \
     --endpoints $MASTER_IP \
     --talosconfig=rendered/talosconfig
     ```
     11. check kubernetes configuration:
-    ```bash
+    ```console
     kubectl cluster-info
     ```
-    ```bash
+    ```console
     kubectl get nodes -o=wide
     ```
     12. access Talos dashboard remotely
-    ```bash
+    ```console
     talosctl dashboard \
     --nodes $MASTER_IP \
     --endpoints $MASTER_IP \
@@ -102,13 +102,13 @@ Now that cluster is setup with *controlplane* node it's time to add worker nodes
 1. first step is to setup the machine. For that steps 1-4 from the previous instruction must be followed.
 2. with Talos started on the machine it's time to configure a worker node:
     1. save IP address to a variable (accessible from Talos dashboard) and save control plane IP:
-    ```bash
+    ```console
     export WORKER_IP=172.16.0.102
     export WORKER=worker0
     export MASTER_IP=172.16.0.100
     ```
     2. generate worker configuration using secrets and patch:
-    ```bash
+    ```console
     talosctl gen config \
     --with-secrets patches/secrets.yaml \
     --config-patch-worker @patches/patch-$WORKER.yml \
@@ -117,23 +117,23 @@ Now that cluster is setup with *controlplane* node it's time to add worker nodes
     anton https://$WORKER_IP:6443
     ```
     3. apply the configuration to the machine (this step will trigger Talos installation to disk):
-    ```bash
+    ```console
     talosctl apply-config --insecure \
     --nodes $WORKER_IP \
     --file rendered/$WORKER.yaml
     ```
     4. wait for the installation to finish
     5. once finished check if worker has successfully joined the cluster:
-    ```bash
+    ```console
     kubectl get nodes -o=wide
     ```
     6. shutdown the machine, remove USB Drive and start the machine again
     7. after some time check if the node is in **READY** status:
-    ```bash
+    ```console
     kubectl get nodes -o=wide
     ```
     8. check the dashboard:
-    ```bash
+    ```console
     talosctl dashboard \
     --nodes $WORKER_IP \
     --endpoints $MASTER_IP \
@@ -143,9 +143,9 @@ Now that cluster is setup with *controlplane* node it's time to add worker nodes
 Instruction above works for single worker. Before adding another worker to the cluster you have to create a patch file 
 in `/cluster-config/patches` for the worker and change **WORKER_IP** and **WORKER** variables from the instruction.
 
------   
-
 At this point I have 3 machines in my cluster - control plane and two workers. Everything is setup and ready to serve services.
+
+-----
 
 Revision summarizing work done in this chapter: `938602404874b8de4c741ecd7a9a3e89d5bd19ec`
 

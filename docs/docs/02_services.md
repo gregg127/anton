@@ -1,4 +1,4 @@
-# Services
+# First service and communication   
 
 Now that I have cluster setup it's time to deploy first services. At the very beggining, for testing purpose I decided to go with [nginx unpriviliged](https://hub.docker.com/r/nginxinc/nginx-unprivileged) that at the very beggining will serve just nginx's default page.
   
@@ -16,8 +16,10 @@ I have created `nginx.yaml` configuration containing:
 * `kind: Service` - contains communication configuration for the deployment. Ensures that given application is accessible **within the cluster** by the service name. 
 
 These two are the main components of deployed application. After deploying nginx, default namespace of the cluster looks like this:
-```bash
-% kubectl -o=wide get nodes,services,deployments,replicasets,pods
+```console
+kubectl -o=wide get nodes,services,deployments,replicasets,pods
+```
+```
 NAME            STATUS   ROLES           AGE    VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE         KERNEL-VERSION   CONTAINER-RUNTIME
 node/overlord   Ready    control-plane   44h    v1.32.3   172.16.0.100   <none>        Talos (v1.9.5)   6.12.18-talos    containerd://2.0.3
 node/worker0    Ready    <none>          43h    v1.32.3   172.16.0.102   <none>        Talos (v1.9.5)   6.12.18-talos    containerd://2.0.3
@@ -64,8 +66,10 @@ I implemented this idea by:
 * adding `Ingress` with `ingressClassName: nginx` (this is a name of `IngressClass` from ingress-nginx) and host `nginx.anton.cluster` routing to `Service` with name `nginx-service` (my service that serves only nginx's default page)
 
 Configuration of [ingress-nginx](https://kubernetes.github.io/ingress-nginx/) is considered as a part of cluster infrastructure and has dedicated namespace with name `ingress-nginx` so that it can be separated from other things and default namespace that will contain my services. `Ingress` configuration(s) will be a part of the default namespace, as this will be changed based on the services that I deploy. Directory structure with cluster resources configuration at this point looks like this:
-```bash
-% tree cluster-resources 
+```console
+tree cluster-resources
+```
+```console
 cluster-resources
 ├── infrastructure
 │   ├── README.md
@@ -82,8 +86,10 @@ cluster-resources
 ```
 
 The `ingress-nginx` namespace looks like this:
-```bash
-% kubectl -n ingress-nginx get all -o=wide
+```console
+kubectl -n ingress-nginx get all -o=wide
+```
+```console
 NAME                                       READY   STATUS      RESTARTS   AGE     IP             NODE       NOMINATED NODE   READINESS GATES
 pod/ingress-nginx-admission-create-fdpwq   0/1     Completed   0          6m38s   10.244.1.45    worker0    <none>           <none>
 pod/ingress-nginx-admission-patch-swscx    0/1     Completed   0          6m38s   10.244.2.42    worker1    <none>           <none>
@@ -104,8 +110,10 @@ job.batch/ingress-nginx-admission-patch    Complete   1/1           5s         6
 Note the number of `ingress-nginx-controller` pods and assigned IP addresses.
 
 Default namespace looks like this:
-```bash
-% kubectl get all -o=wide
+```console
+kubectl get all -o=wide
+```
+```console
 NAME                         READY   STATUS    RESTARTS   AGE    IP            NODE      NOMINATED NODE   READINESS GATES
 pod/nginx-57f7cbcdcc-wx5gj   1/1     Running   0          9m2s   10.244.2.41   worker1   <none>           <none>
 
@@ -121,8 +129,10 @@ replicaset.apps/nginx-57f7cbcdcc   1         1         1       9m2s   nginx     
 ```
 
 Test to confirm that nginx pod from default workspace is accessible by the **control plane IP** with routing by host:
-```bash
-% curl -H "Host: nginx.anton.cluster" http://172.16.0.100/
+```console
+curl -H "Host: nginx.anton.cluster" http://172.16.0.100/
+```
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -148,15 +158,19 @@ Commercial support is available at
 </html>
 ```
 and proof that one of nginx's pods served the request:
-```bash
-% kubectl get pods -o=wide
+```console
+kubectl get pods -o=wide
+```
+```console
 NAME                     READY   STATUS    RESTARTS   AGE     IP            NODE      NOMINATED NODE   READINESS GATES
 nginx-7f7fc686d9-8xb4f   1/1     Running   0          2m26s   10.244.2.43   worker1   <none>           <none>
 nginx-7f7fc686d9-c4grf   1/1     Running   0          2m23s   10.244.1.47   worker0   <none>           <none>
-% kubectl logs nginx-7f7fc686d9-8xb4f | grep curl
+```
+```console
+kubectl logs nginx-7f7fc686d9-8xb4f | grep curl
+```
+```console
 10.244.0.0 - - [11/Apr/2025:10:54:22 +0000] "GET / HTTP/1.1" 200 615 "-" "curl/8.7.1" "172.16.0.90"
-% kubectl logs nginx-7f7fc686d9-c4grf | grep curl
-%
 ```
 
 ## DNS
@@ -166,7 +180,7 @@ The problem at this point is that I have to communicate with cluster by the IP a
 ### Domain configuration for development
 
 Temporary solution is to add entry in `/etc/hosts` with domain that points to the IP address of the cluster:
-```bash
+```console
 172.16.0.100 anton.golebiowski.dev
 ```
 This will enable communication with cluster by the domain name only from machine that contains this entry. Also appriopriate host entry must be added to `Ingress`.
@@ -182,14 +196,65 @@ To be able to communicate with the cluster outside local network I have to make 
     * on my router I need to configure dynamic DNS with previously generated credentials, so that changed IP address can be announced and updated on the provider side
 * configure my router to accept connections from the Internet on ports `80` and `443` and route it to my cluster's control plane. **This can be disabled at any moment**.
 
-
 The options above address only domain name resolution problem. Now it's time to deal with certificates to ensure safe communication.
 
 ## Certification
 
-TODO
+For managing certificates, issuers etc. I used [cert-manager](https://cert-manager.io). Certificate are ordered through Lets Encrypt. Setup was quite easy:
 
+* first cert-manager YAML manifest was downloaded and deployed, no changes needed
+* then I had to create staging and prod Issuers in the **default namespace**
+* after that I had to reconfigure Ingress to use TLS
+
+Staging issuer is for testing purposes, due to limitations in calling Lets Encrypt prod server. Ingress is responsible for creating certificate request etc. Everything happens automatically after Ingress creation. To verify if certificate was successfully created run:
+```console
+kubectl get certificates
+```
+```console
+NAME                                READY   SECRET                              AGE
+letsencrypt-prod-anton-tls-secret   True    letsencrypt-prod-anton-tls-secret   18h
+```
+
+To verify that SSL is working:
+```console
+curl https://anton.golebiowski.dev
+```
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+```
+
+To summarize this chapter I ended up with:
+
+* working nginx `Deployment` and `Service`
+* subdomain configured to point to my networkć 
+* dynamic DNS to update IP address that the subdomain points to
+* deployed `cert-manager` to handle certification
+* updated `Ingress` so that it requests and sets up certificate for configured host.
+  
 -----
+
+Revision summarizing work done in this chapter: `6bda72cef0f7d369376882d014329a8e21f72435`
 
 Sources:
 
@@ -199,3 +264,5 @@ Sources:
 * [https://kubernetes.github.io/ingress-nginx/deploy/baremetal/](https://kubernetes.github.io/ingress-nginx/deploy/baremetal/)
 * [https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/](https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/)
 * [https://medium.com/@muppedaanvesh/%EF%B8%8F-exploring-types-of-routing-based-ingresses-in-kubernetes-da56f51b3a6b](https://medium.com/@muppedaanvesh/%EF%B8%8F-exploring-types-of-routing-based-ingresses-in-kubernetes-da56f51b3a6b)
+* [https://cert-manager.io/docs/tutorials/acme/nginx-ingress/](https://cert-manager.io/docs/tutorials/acme/nginx-ingress/)
+* [https://cert-manager.io/docs/installation/kubectl/](https://cert-manager.io/docs/installation/kubectl/)
