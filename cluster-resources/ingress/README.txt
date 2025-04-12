@@ -1,1 +1,0 @@
-This directory contains Ingresses for my services deployed in default namespace along with certification stuff.
