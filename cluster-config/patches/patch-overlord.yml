@@ -6,7 +6,7 @@ machine:
     hostname: overlord
   install:
     diskSelector:
-      model: WDC*
+      model: SAM*
     wipe: true
 cluster:
   allowSchedulingOnControlPlanes: true

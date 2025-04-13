@@ -6,5 +6,5 @@ machine:
     hostname: worker1
   install:
     diskSelector:
-      model: SAM*
+      model: WDC*
     wipe: true

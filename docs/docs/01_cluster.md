@@ -36,7 +36,7 @@ To set up a server node, the following steps need to be followed:
 5. with Talos started its time to setup master node and cluster:
     1. save IP address to a variable (accessible from Talos dashboard):
     ```console
-    export MASTER_IP=172.16.0.100
+    export MASTER_IP=172.16.0.103
     ```
     2. generate control plane and Talos configuration using secrets and patch:
     ```console
@@ -105,7 +105,7 @@ Now that cluster is setup with *controlplane* node it's time to add worker nodes
     ```console
     export WORKER_IP=172.16.0.102
     export WORKER=worker0
-    export MASTER_IP=172.16.0.100
+    export MASTER_IP=172.16.0.103
     ```
     2. generate worker configuration using secrets and patch:
     ```console
