@@ -1,10 +1,13 @@
+# podinfo.yaml
+# This is an example on how Flux's GitRepository and Kustomization work
+--- 
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
   name: podinfo
   namespace: flux-system
 spec:
-  interval: 30s
+  interval: 1m15s # check for new commits every minute and 15 seconds and apply changes
   ref:
     branch: master
   url: https://github.com/stefanprodan/podinfo
@@ -15,10 +18,12 @@ metadata:
   name: podinfo
   namespace: flux-system
 spec:
-  interval: 5m0s
-  path: ./kustomize
-  prune: true
+  path: ./kustomize # path to https://github.com/stefanprodan/podinfo/tree/master/kustomize containing configuration
+  interval: 60m0s # detect drift and undo kubectl edits every hour
+  timeout: 3m0s # give up waiting after three minutes
+  retryInterval: 2m0s # retry every two minutes on apply or waiting failures
+  prune: true # remove stale resources from cluster
+  targetNamespace: default
   sourceRef:
     kind: GitRepository
     name: podinfo
-  targetNamespace: default

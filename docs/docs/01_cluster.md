@@ -54,16 +54,16 @@ To set up a server node, the following steps need to be followed:
     --file rendered/controlplane.yaml
     ```
     4. wait for the installation to be complete, which will end with system restart
-    5. shutdown the machine, unplug USB drive and start it again
-    6. wait for Talos to boot (this may take up to 10 minutes or even more)
-    7. having Talos started, setup Kubernetes:
+    5. wait for Talos `Kubelet` to be in healthy state
+    6. having Talos ready, setup Kubernetes:
     ```console
     talosctl bootstrap \
     --nodes $MASTER_IP \
     --endpoints $MASTER_IP \
     --talosconfig=rendered/talosconfig
     ```
-    8. wait until all checkboxes under *controlplane* will be healthy and **READY** state will be true
+    7. wait until all checkboxes under *controlplane* will be healthy and **READY** state will be true
+    8. shutdown the machine, unplug USB drive and start it again
     9.  make sure everything works fine
     ```console
     talosctl health \

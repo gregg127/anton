@@ -85,6 +85,9 @@ cluster-resources
         └── nginx.yaml
 ```
 
+!!! warning
+    This structure was changed in the following chapters.
+
 The `ingress-nginx` namespace looks like this:
 ```console
 kubectl -n ingress-nginx get all -o=wide
