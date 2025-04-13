@@ -1,0 +1,1 @@
+This directory contains infrastructural resources that are necessary for my services to run, eg. Ingress controller configuration.

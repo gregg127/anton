@@ -247,6 +247,8 @@ Commercial support is available at
 </body>
 ```
 
+## Summary
+
 To summarize this chapter I ended up with:
 
 * working nginx `Deployment` and `Service`

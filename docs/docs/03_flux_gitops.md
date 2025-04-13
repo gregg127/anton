@@ -462,7 +462,7 @@ replicaset.apps/cert-manager-webhook-54b5d8cb64      1         1         1      
 ```yaml
 # certificate-issuers.yaml
 apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
+kind: Issuer
 metadata:
   name: letsencrypt-staging
 spec:
@@ -481,7 +481,7 @@ spec:
             class: nginx
 ---
 apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
+kind: Issuer
 metadata:
   name: letsencrypt-prod
 spec:
@@ -518,6 +518,113 @@ letsencrypt-prod      True    The ACME account was registered with the ACME serv
 letsencrypt-staging   True    The ACME account was registered with the ACME server   3m20s
 ```
 
+### ingress
+
+1. restore and apply YAML configuration for Ingress. This remained unchanged:
+```yaml
+# anton-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: anton-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - anton.golebiowski.dev
+      secretName: letsencrypt-prod-anton-tls-secret
+  rules:
+    - host: anton.golebiowski.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: podinfo
+                port:
+                  number: 9898
+```
+2. after some time verify that certificate was successfully created:
+```console
+kubectl get certificaterequests,certificates
+```
+```
+NAME                                                                         APPROVED   DENIED   READY   ISSUER             REQUESTOR                                         AGE
+certificaterequest.cert-manager.io/letsencrypt-prod-anton-tls-secret-47g6q   True                True    letsencrypt-prod   system:serviceaccount:cert-manager:cert-manager   2m1s
+
+NAME                                                            READY   SECRET                              AGE
+certificate.cert-manager.io/letsencrypt-prod-anton-tls-secret   True    letsencrypt-prod-anton-tls-secret   2m1s
+```
+3. verify SSL:
+```
+curl https://anton.golebiowski.dev
+```
+```json
+{
+  "hostname": "podinfo-6b885b7698-ngmgk",
+  "version": "6.8.0",
+  "revision": "b3396adb98a6a0f5eeedd1a600beaf5e954a1f28",
+  "color": "#34577c",
+  "logo": "https://raw.githubusercontent.com/stefanprodan/podinfo/gh-pages/cuddle_clap.gif",
+  "message": "greetings from podinfo v6.8.0",
+  "goos": "linux",
+  "goarch": "amd64",
+  "runtime": "go1.24.1",
+  "num_goroutine": "9",
+  "num_cpu": "4"
+}
+```
+
+!!! note
+    DNS configuration was not mentioned in this chapter. Please remember that I use dynamic DNS and subdomain configuration set by my domain provider. This was description in the previous chapter.
+
+## Summary
+To summarize what I did while working on this chapter:
+
+* removed all previous YAML manifests
+* wiped my cluster and set it up again
+* setup Flux and implemented GitOps
+* deployed podinfo as an example and testing application (replacement for nginx-unpriviliged)
+* restored and migrated nginx-ingress
+* restored and migrated cert-manager
+* restored and refactored cert issuers manifest(s)
+* restored ingress
+
+Now the repository looks much better and a huge amount of code from previous static YAMLs was removed.
+
+After this directory structure with my cluster resources looks like this:
+```
+tree cluster-resources 
+```
+```
+cluster-resources
+├── infrastructure
+│   ├── README.md
+│   ├── cert-manager
+│   │   ├── README.md
+│   │   └── cert-manager.yaml
+│   ├── flux
+│   │   └── flux-system
+│   │       ├── gotk-components.yaml
+│   │       ├── gotk-sync.yaml
+│   │       └── kustomization.yaml
+│   └── nginx-ingress
+│       ├── README.md
+│       └── nginx-ingress.yaml
+├── ingress
+│   ├── README.txt
+│   ├── anton-ingress.yaml
+│   └── cert-issuers
+│       └── certificate-issuers.yaml
+└── services
+    ├── README.txt
+    └── podinfo
+        └── podinfo.yaml
+```
 ---
 
 Sources:
