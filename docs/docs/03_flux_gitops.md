@@ -303,8 +303,8 @@ Considering everything above, looks like the installation works fine.
 
 While working with Flux setup I wiped the cluster and deleted previously created:
 
-* `cert-manager`
 * `nginx-ingress`
+* `cert-manager`
 * cert issuers
 * `anton-ingress`
 * `nginx` deployment
@@ -382,6 +382,78 @@ service/ingress-nginx-controller-admission   ClusterIP   10.104.176.30   <none> 
 
 NAME                                      DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE   CONTAINERS   IMAGES                                                                                                                    SELECTOR
 daemonset.apps/ingress-nginx-controller   3         3         3       3            3           kubernetes.io/os=linux   13m   controller   registry.k8s.io/ingress-nginx/controller:v1.8.5@sha256:5831fa630e691c0c8c93ead1b57b37a6a8e5416d3d2364afeb8fe36fe0fef680   app.kubernetes.io/component=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
+```
+
+### cert-manager, certification issuers, ingress
+
+1. create YAML configuration for cert-manager:
+```yaml
+# cert-manager.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: jetstack
+  namespace: cert-manager
+spec:
+  interval: 5m0s
+  url: https://charts.jetstack.io
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: cert-manager
+      version: ">=v1.12.0 <1.13.0"
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+        namespace: cert-manager
+      interval: 1m
+  values:
+    installCRDs: true
+```
+2. apply the configuration:
+```console
+kubectl apply -f cert-manager.yaml
+```
+```
+namespace/cert-manager created
+helmrepository.source.toolkit.fluxcd.io/jetstack created
+helmrelease.helm.toolkit.fluxcd.io/cert-manager created
+```
+3. see resources that were added to the namespace:
+```console
+kubectl get all -n cert-manager -o=wide
+```
+```
+NAME                                           READY   STATUS    RESTARTS   AGE     IP           NODE      NOMINATED NODE   READINESS GATES
+pod/cert-manager-7687c8fcf7-wfhdx              1/1     Running   0          3m58s   10.244.1.4   worker0   <none>           <none>
+pod/cert-manager-cainjector-567d9d5568-l4cqb   1/1     Running   0          3m58s   10.244.3.7   worker1   <none>           <none>
+pod/cert-manager-webhook-54b5d8cb64-bmxtj      1/1     Running   0          3m58s   10.244.3.6   worker1   <none>           <none>
+
+NAME                           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE     SELECTOR
+service/cert-manager           ClusterIP   10.102.39.228   <none>        9402/TCP   3m58s   app.kubernetes.io/component=controller,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=cert-manager
+service/cert-manager-webhook   ClusterIP   10.109.66.56    <none>        443/TCP    3m58s   app.kubernetes.io/component=webhook,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=webhook
+
+NAME                                      READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS                IMAGES                                              SELECTOR
+deployment.apps/cert-manager              1/1     1            1           3m58s   cert-manager-controller   quay.io/jetstack/cert-manager-controller:v1.12.16   app.kubernetes.io/component=controller,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=cert-manager
+deployment.apps/cert-manager-cainjector   1/1     1            1           3m58s   cert-manager-cainjector   quay.io/jetstack/cert-manager-cainjector:v1.12.16   app.kubernetes.io/component=cainjector,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=cainjector
+deployment.apps/cert-manager-webhook      1/1     1            1           3m58s   cert-manager-webhook      quay.io/jetstack/cert-manager-webhook:v1.12.16      app.kubernetes.io/component=webhook,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=webhook
+
+NAME                                                 DESIRED   CURRENT   READY   AGE     CONTAINERS                IMAGES                                              SELECTOR
+replicaset.apps/cert-manager-7687c8fcf7              1         1         1       3m58s   cert-manager-controller   quay.io/jetstack/cert-manager-controller:v1.12.16   app.kubernetes.io/component=controller,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=cert-manager,pod-template-hash=7687c8fcf7
+replicaset.apps/cert-manager-cainjector-567d9d5568   1         1         1       3m58s   cert-manager-cainjector   quay.io/jetstack/cert-manager-cainjector:v1.12.16   app.kubernetes.io/component=cainjector,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=cainjector,pod-template-hash=567d9d5568
+replicaset.apps/cert-manager-webhook-54b5d8cb64      1         1         1       3m58s   cert-manager-webhook      quay.io/jetstack/cert-manager-webhook:v1.12.16      app.kubernetes.io/component=webhook,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=webhook,pod-template-hash=54b5d8cb64
 ```
 
 ---
