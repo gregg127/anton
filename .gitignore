@@ -2,7 +2,6 @@
 cluster-config/patches/secrets.yaml
 cluster-config/rendered/*
 !cluster-config/rendered/README.txt
-cluster-resources/ingress/cert-issuers/*
 cluster-resources/ingress/anton-ingress.yaml
 .DS_Store
 !*gpg

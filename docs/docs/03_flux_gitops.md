@@ -384,7 +384,7 @@ NAME                                      DESIRED   CURRENT   READY   UP-TO-DATE
 daemonset.apps/ingress-nginx-controller   3         3         3       3            3           kubernetes.io/os=linux   13m   controller   registry.k8s.io/ingress-nginx/controller:v1.8.5@sha256:5831fa630e691c0c8c93ead1b57b37a6a8e5416d3d2364afeb8fe36fe0fef680   app.kubernetes.io/component=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
 ```
 
-### cert-manager, certification issuers, ingress
+### cert-manager
 
 1. create YAML configuration for cert-manager:
 ```yaml
@@ -454,6 +454,68 @@ NAME                                                 DESIRED   CURRENT   READY  
 replicaset.apps/cert-manager-7687c8fcf7              1         1         1       3m58s   cert-manager-controller   quay.io/jetstack/cert-manager-controller:v1.12.16   app.kubernetes.io/component=controller,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=cert-manager,pod-template-hash=7687c8fcf7
 replicaset.apps/cert-manager-cainjector-567d9d5568   1         1         1       3m58s   cert-manager-cainjector   quay.io/jetstack/cert-manager-cainjector:v1.12.16   app.kubernetes.io/component=cainjector,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=cainjector,pod-template-hash=567d9d5568
 replicaset.apps/cert-manager-webhook-54b5d8cb64      1         1         1       3m58s   cert-manager-webhook      quay.io/jetstack/cert-manager-webhook:v1.12.16      app.kubernetes.io/component=webhook,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=webhook,pod-template-hash=54b5d8cb64
+```
+
+### certification issuers
+
+1. create YAML configuration for cluster issuers:
+```yaml
+# certificate-issuers.yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: grzegorz.golebiowski127@gmail.com
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-staging-private-key
+    # Enable the HTTP-01 challenge provider
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: grzegorz.golebiowski127@gmail.com
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-prod-private-key
+    # Enable the HTTP-01 challenge provider
+    solvers:
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+```
+2. apply the configuration:
+```console
+kubectl apply -f certificate-issuers.yaml
+```
+```
+clusterissuer.cert-manager.io/letsencrypt-staging created
+clusterissuer.cert-manager.io/letsencrypt-prod created
+```
+3. verify that ACME accounts were registered:
+```console
+kubectl get clusterissuers -o=wide
+```
+```
+NAME                  READY   STATUS                                                 AGE
+letsencrypt-prod      True    The ACME account was registered with the ACME server   3m20s
+letsencrypt-staging   True    The ACME account was registered with the ACME server   3m20s
 ```
 
 ---
