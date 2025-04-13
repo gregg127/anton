@@ -298,6 +298,92 @@ Events:
 
 Considering everything above, looks like the installation works fine.
 
+
+## Static YAMLs migration  
+
+While working with Flux setup I wiped the cluster and deleted previously created:
+
+* `cert-manager`
+* `nginx-ingress`
+* cert issuers
+* `anton-ingress`
+* `nginx` deployment
+
+Which were defined by static YAMLs. Now it's time to get them all back, but using Flux and Helm.
+
+### nginx-ingress
+
+1. create YAML configuration for `nginx-service`:
+```yaml
+# nginx-ingress.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/enforce-version: latest
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+spec:
+  interval: 5m0s
+  url: https://kubernetes.github.io/ingress-nginx # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: ingress-nginx
+      version: ">=v4.7.0 <4.8.0"
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
+        namespace: ingress-nginx
+      interval: 1m
+  values:
+    controller:
+      hostNetwork: true
+      hostPort:
+        enabled: true
+      kind: DaemonSet
+      service:
+        enabled: false
+```
+2. apply the configuration:
+```console
+kubectl apply -f nginx-ingress.yaml
+```
+```
+namespace/ingress-nginx created
+helmrepository.source.toolkit.fluxcd.io/ingress-nginx created
+helmrelease.helm.toolkit.fluxcd.io/ingress-nginx created
+```
+3. see resources that were added to the namespace:
+```console
+kubectl get all -n ingress-nginx -o=wide
+```
+```
+NAME                                 READY   STATUS    RESTARTS   AGE   IP             NODE       NOMINATED NODE   READINESS GATES
+pod/ingress-nginx-controller-fl58t   1/1     Running   0          13m   172.16.0.100   worker1    <none>           <none>
+pod/ingress-nginx-controller-jj2lq   1/1     Running   0          13m   172.16.0.103   overlord   <none>           <none>
+pod/ingress-nginx-controller-vxqwr   1/1     Running   0          13m   172.16.0.102   worker0    <none>           <none>
+
+NAME                                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+service/ingress-nginx-controller-admission   ClusterIP   10.104.176.30   <none>        443/TCP   13m   app.kubernetes.io/component=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
+
+NAME                                      DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE   CONTAINERS   IMAGES                                                                                                                    SELECTOR
+daemonset.apps/ingress-nginx-controller   3         3         3       3            3           kubernetes.io/os=linux   13m   controller   registry.k8s.io/ingress-nginx/controller:v1.8.5@sha256:5831fa630e691c0c8c93ead1b57b37a6a8e5416d3d2364afeb8fe36fe0fef680   app.kubernetes.io/component=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
+```
+
 ---
 
 Sources:

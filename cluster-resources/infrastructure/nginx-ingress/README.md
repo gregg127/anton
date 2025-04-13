@@ -1,0 +1,1 @@
+This directory contains configuration of Kubernetes nginx-ingress. 
