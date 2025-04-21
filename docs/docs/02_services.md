@@ -1,21 +1,21 @@
-# First service and communication   
+# First Service and Communication   
 
-Now that I have cluster setup it's time to deploy first services. At the very beggining, for testing purpose I decided to go with [nginx unpriviliged](https://hub.docker.com/r/nginxinc/nginx-unprivileged) that at the very beggining will serve just nginx's default page.
+Now that I have the cluster set up, it's time to deploy the first services. At the very beginning, for testing purposes, I decided to go with [nginx unprivileged](https://hub.docker.com/r/nginxinc/nginx-unprivileged), which will initially serve just nginx's default page.
   
 This will help me figure out DNS and routing. My two main goals for this step are:
 
-* make deploying new services as easy as possible
-* make routing to those services from outside the cluster as easy as possible
+* Make deploying new services as easy as possible.
+* Make routing to those services from outside the cluster as easy as possible.
 
-For now I decided not to use Helm or any GitOps solutions. I will go with `kubectl` and YAML manifests.
+For now, I decided not to use Helm or any GitOps solutions. I'll stick with `kubectl` and YAML manifests.
 
-## Deploying application
-I have created `nginx.yaml` configuration containing:
+## Deploying the Application
+I created an `nginx.yaml` configuration containing:
 
-* `kind: Deployment` - contains mainly specification for pods, containers and resources. This is used to manage application.
-* `kind: Service` - contains communication configuration for the deployment. Ensures that given application is accessible **within the cluster** by the service name. 
+* `kind: Deployment` - mainly specifies pods, containers, and resources. This is used to manage the application.
+* `kind: Service` - contains communication configuration for the deployment. It ensures that the application is accessible **within the cluster** by the service name. 
 
-These two are the main components of deployed application. After deploying nginx, default namespace of the cluster looks like this:
+These two are the main components of the deployed application. After deploying nginx, the default namespace of the cluster looks like this:
 ```console
 kubectl -o=wide get nodes,services,deployments,replicasets,pods
 ```
@@ -39,33 +39,32 @@ NAME                         READY   STATUS    RESTARTS   AGE   IP           NOD
 pod/nginx-7f94bbff4f-pwp4j   1/1     Running   0          20m   10.244.1.4   worker0   <none>           <none>
 ```
 
-## Cluster accessibility
+## Cluster Accessibility
 
-For now cluster contains deployment and service pointing to the deployment pods. The problem is that now `nginx` is accessible only
-within the cluster. After many painful experiments and research, considering that I am working with **bare metal** cluster I made decisions:
+For now, the cluster contains a deployment and a service pointing to the deployment pods. The problem is that `nginx` is accessible only within the cluster. After many painful experiments and research, and considering that I am working with a **bare metal** cluster, I made the following decisions:
 
-* routing will be done with `Ingress` manifests
-* to get this working cluster must contain **Ingress controller**
-* no external **Load Balancer** will be used
-* `NodePorts` will not be used, due to awkward port range `30000-32767`
-* `DaemonSet` with **Ingress controller** will be used, so that every cluster node has pod with the controller
-* each pod with the controller will use **host network** by adding configuration `template.spec.hostNetwork: true`. Thanks to that:
-    * I can avoid port range `30000-32767` and the controller can bind ports `80` and `443` directly to cluster nodes that run applications
-    * if I run web applications those will be acccessible without using port range `30000-32767`. For example `nginx` service will be accessible from outside the cluster by address `http://nginx.cluster.local` assuming that `Ingress` with host `nginx.cluster.local` pointing to `nginx` service will be added and external DNS pointing the domain to the cluster will be configured (DNS issue will be described later).
-* **control plane** will have to allow scheduling, so that pod with the controller can run on this node.
+* Routing will be done with `Ingress` manifests.
+* To get this working, the cluster must contain an **Ingress controller**.
+* No external **Load Balancer** will be used.
+* `NodePorts` will not be used due to the awkward port range `30000-32767`.
+* A `DaemonSet` with an **Ingress controller** will be used so that every cluster node has a pod with the controller.
+* Each pod with the controller will use the **host network** by adding the configuration `template.spec.hostNetwork: true`. Thanks to this:
+    * I can avoid the port range `30000-32767`, and the controller can bind ports `80` and `443` directly to cluster nodes that run applications.
+    * If I run web applications, they will be accessible without using the port range `30000-32767`. For example, the `nginx` service will be accessible from outside the cluster by the address `http://nginx.cluster.local`, assuming that an `Ingress` with the host `nginx.cluster.local` pointing to the `nginx` service is added and an external DNS pointing the domain to the cluster is configured (DNS issues will be described later).
+* The **control plane** will have to allow scheduling so that a pod with the controller can run on this node.
 
-This solution has some drawbacks and security considerations. I will not describe these here. For detailed explanation about this and the solution above go to sources that my work is based on: [ingress-nginx baremetal](https://kubernetes.github.io/ingress-nginx/deploy/baremetal/), [datavirke's blog](https://datavirke.dk/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/).
+This solution has some drawbacks and security considerations. I won't describe these here. For a detailed explanation about this and the solution above, check out the sources my work is based on: [ingress-nginx baremetal](https://kubernetes.github.io/ingress-nginx/deploy/baremetal/), [datavirke's blog](https://datavirke.dk/posts/bare-metal-kubernetes-part-4-ingress-dns-certificates/).
 
 I implemented this idea by:
 
-* adding Kubernetes [ingress-nginx](https://kubernetes.github.io/ingress-nginx/):
-    * firstly I copied [bare metal YAML manifest](https://github.com/kubernetes/ingress-nginx/blob/main/deploy/static/provider/baremetal/deploy.yaml) to a file so that I will by able to deploy it using `kubectl apply`
-    * from the manifest I removed `Service` with name `ingress-nginx-controller`. This will not be needed because of daemon set
-    * `Deployment` with name `ingress-nginx-controller` was changed to `DaemonSet` with added `template.spec.hostNetwork: true` configuration and removed configuration specific for `Deployment` 
-    * in order to get `template.spec.hostNetwork: true` working I had to add to nginx-ingress namespace labels `pod-security.kubernetes.io/enforce: privileged` and `pod-security.kubernetes.io/enforce-version: latest`
-* adding `Ingress` with `ingressClassName: nginx` (this is a name of `IngressClass` from ingress-nginx) and host `nginx.anton.cluster` routing to `Service` with name `nginx-service` (my service that serves only nginx's default page)
+* Adding Kubernetes [ingress-nginx](https://kubernetes.github.io/ingress-nginx/):
+    * First, I copied the [bare metal YAML manifest](https://github.com/kubernetes/ingress-nginx/blob/main/deploy/static/provider/baremetal/deploy.yaml) to a file so that I could deploy it using `kubectl apply`.
+    * From the manifest, I removed the `Service` with the name `ingress-nginx-controller`. This won't be needed because of the DaemonSet.
+    * The `Deployment` with the name `ingress-nginx-controller` was changed to a `DaemonSet` with the added `template.spec.hostNetwork: true` configuration and removed configurations specific to `Deployment`. 
+    * To get `template.spec.hostNetwork: true` working, I had to add the following labels to the nginx-ingress namespace: `pod-security.kubernetes.io/enforce: privileged` and `pod-security.kubernetes.io/enforce-version: latest`.
+* Adding an `Ingress` with `ingressClassName: nginx` (this is the name of the `IngressClass` from ingress-nginx) and the host `nginx.anton.cluster` routing to the `Service` with the name `nginx-service` (my service that serves only nginx's default page).
 
-Configuration of [ingress-nginx](https://kubernetes.github.io/ingress-nginx/) is considered as a part of cluster infrastructure and has dedicated namespace with name `ingress-nginx` so that it can be separated from other things and default namespace that will contain my services. `Ingress` configuration(s) will be a part of the default namespace, as this will be changed based on the services that I deploy. Directory structure with cluster resources configuration at this point looks like this:
+The configuration of [ingress-nginx](https://kubernetes.github.io/ingress-nginx/) is considered part of the cluster infrastructure and has a dedicated namespace named `ingress-nginx` so that it can be separated from other things and the default namespace, which will contain my services. `Ingress` configurations will be part of the default namespace, as these will change based on the services I deploy. The directory structure with cluster resource configurations at this point looks like this:
 ```console
 tree cluster-resources
 ```
@@ -110,7 +109,7 @@ NAME                                       STATUS     COMPLETIONS   DURATION   A
 job.batch/ingress-nginx-admission-create   Complete   1/1           4s         6m38s   create       registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.5.2@sha256:e8825994b7a2c7497375a9b945f386506ca6a3eda80b89b74ef2db743f66a5ea   batch.kubernetes.io/controller-uid=9a15f7e8-7d2f-4363-9e3b-4608232bf2ab
 job.batch/ingress-nginx-admission-patch    Complete   1/1           5s         6m38s   patch        registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.5.2@sha256:e8825994b7a2c7497375a9b945f386506ca6a3eda80b89b74ef2db743f66a5ea   batch.kubernetes.io/controller-uid=5db90429-36bf-4743-ac08-15746aec21b2
 ```
-Note the number of `ingress-nginx-controller` pods and assigned IP addresses.
+Note the number of `ingress-nginx-controller` pods and their assigned IP addresses.
 
 Default namespace looks like this:
 ```console
@@ -178,38 +177,38 @@ kubectl logs nginx-7f7fc686d9-8xb4f | grep curl
 
 ## DNS
 
-The problem at this point is that I have to communicate with cluster by the IP address of control plane. Cluster should be accessible by some domain name, lets say `anton.golebiowski.dev`.
+The problem at this point is that I have to communicate with the cluster by the IP address of the control plane. The cluster should be accessible by some domain name, let's say `anton.golebiowski.dev`.
 
-### Domain configuration for development
+### Domain Configuration for Development
 
-Temporary solution is to add entry in `/etc/hosts` with domain that points to the IP address of the cluster:
+A temporary solution is to add an entry in `/etc/hosts` with a domain that points to the IP address of the cluster:
 ```console
 172.16.0.100 anton.golebiowski.dev
 ```
-This will enable communication with cluster by the domain name only from machine that contains this entry. Also appriopriate host entry must be added to `Ingress`.
+This will enable communication with the cluster by the domain name only from the machine that contains this entry. Also, an appropriate host entry must be added to `Ingress`.
 
 ### Dynamic DNS
 
-To be able to communicate with the cluster outside local network I have to make my local network public and point domain to my IP address. There is another problem - I have changing IP address. So in order to make this work I need to configure dynamic DNS entry both on the domain provider side and on my local network router. To achieve that I need to:
+To be able to communicate with the cluster outside the local network, I have to make my local network public and point the domain to my IP address. There is another problem - I have a changing IP address. So in order to make this work, I need to configure a dynamic DNS entry both on the domain provider side and on my local network router. To achieve that I need to:
 
-* buy domain (eg. `golebiowski.dev`)
-* configure Dynamic DNS
-    * at the domain provider configuration panel I need to add credentials for the subdomain that will be used as dynamic DNS entry
-    * at the domain provider configuration panel I need to create dynamic DNS entry with subdomain `anton.golebiowski.dev`
-    * on my router I need to configure dynamic DNS with previously generated credentials, so that changed IP address can be announced and updated on the provider side
-* configure my router to accept connections from the Internet on ports `80` and `443` and route it to my cluster's control plane. **This can be disabled at any moment**.
+* Buy a domain (e.g., `golebiowski.dev`).
+* Configure Dynamic DNS:
+    * At the domain provider configuration panel, I need to add credentials for the subdomain that will be used as a dynamic DNS entry.
+    * At the domain provider configuration panel, I need to create a dynamic DNS entry with the subdomain `anton.golebiowski.dev`.
+    * On my router, I need to configure dynamic DNS with previously generated credentials so that the changed IP address can be announced and updated on the provider side.
+* Configure my router to accept connections from the Internet on ports `80` and `443` and route them to my cluster's control plane. **This can be disabled at any moment**.
 
-The options above address only domain name resolution problem. Now it's time to deal with certificates to ensure safe communication.
+The options above address only the domain name resolution problem. Now it's time to deal with certificates to ensure safe communication.
 
 ## Certification
 
-For managing certificates, issuers etc. I used [cert-manager](https://cert-manager.io). Certificate are ordered through Lets Encrypt. Setup was quite easy:
+For managing certificates, issuers, etc., I used [cert-manager](https://cert-manager.io). Certificates are ordered through Let's Encrypt. The setup was quite easy:
 
-* first cert-manager YAML manifest was downloaded and deployed, no changes needed
-* then I had to create staging and prod Issuers in the **default namespace**
-* after that I had to reconfigure Ingress to use TLS
+* First, the cert-manager YAML manifest was downloaded and deployed, no changes needed.
+* Then I had to create staging and prod Issuers in the **default namespace**.
+* After that, I had to reconfigure Ingress to use TLS.
 
-Staging issuer is for testing purposes, due to limitations in calling Lets Encrypt prod server. Ingress is responsible for creating certificate request etc. Everything happens automatically after Ingress creation. To verify if certificate was successfully created run:
+The staging issuer is for testing purposes, due to limitations in calling the Let's Encrypt prod server. Ingress is responsible for creating certificate requests, etc. Everything happens automatically after Ingress creation. To verify if a certificate was successfully created, run:
 ```console
 kubectl get certificates
 ```
@@ -249,13 +248,13 @@ Commercial support is available at
 
 ## Summary
 
-To summarize this chapter I ended up with:
+To summarize this chapter, I ended up with:
 
-* working nginx `Deployment` and `Service`
-* subdomain configured to point to my networkć 
-* dynamic DNS to update IP address that the subdomain points to
-* deployed `cert-manager` to handle certification
-* updated `Ingress` so that it requests and sets up certificate for configured host.
+* A working nginx `Deployment` and `Service`.
+* A subdomain configured to point to my network.
+* Dynamic DNS to update the IP address that the subdomain points to.
+* Deployed `cert-manager` to handle certification.
+* Updated `Ingress` so that it requests and sets up a certificate for the configured host.
   
 -----
 

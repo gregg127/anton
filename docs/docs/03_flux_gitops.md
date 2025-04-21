@@ -1,28 +1,28 @@
 # A step back - Flux, Helm, GitOps
 
-There is still much to be done, but I decided to go on a little side quest. Now I keep in the repository YAML manifests downloaded from the source, eg. `cert-manager`. This causes my repo to contain a lot of copy-pasted code and makes it hard to manage versioning of those manifests. Therefore I decided to go with [Helm](https://helm.sh) and migrate all of my current configuration.
+There's still a lot to do, but I decided to take a little side quest. Right now, I keep YAML manifests downloaded from the source (e.g., `cert-manager`) in the repository. This makes my repo bloated with copy-pasted code and complicates version management for these manifests. So, I decided to switch to [Helm](https://helm.sh) and migrate all my current configuration.
 
-In order to keep all the configuration needed to setup my cluster in the Git repository I should use `HelmRelease` and `HelmRepository` CRDs. The other way would be to use command `helm install` with proper arguments for each thing that I want to install to get the thing working in my cluster. So to keep things nice and keep good practises I decided to install [Flux](https://fluxcd.io) in my cluster, so that I could configure everything in GitOps manner and have access to mentioned CRD. This will reduce the amount of code I keep in my repository for infrastructural/management elements of my cluster and allow me to create and deploy my applications in GitOps manner using Github.
+To keep all the configuration needed to set up my cluster in the Git repository, I should use the `HelmRelease` and `HelmRepository` CRDs. The alternative would be to use the `helm install` command with the proper arguments for each thing I want to install. But to keep things clean and follow good practices, I decided to install [Flux](https://fluxcd.io) in my cluster. This way, I can configure everything in a GitOps manner and use the mentioned CRDs. This will reduce the amount of code in my repository for infrastructure/management elements of my cluster and allow me to create and deploy my applications in a GitOps manner using GitHub.
 
 !!! warning
-    While experimenting with Flux I encountered error with kustomization, which could not be removed in any way. At the end I decided to wipe the cluster, install everything again and start over. This was also a good opportunity to check if my previous instructions of setting up the cluster are ok.
+    While experimenting with Flux, I ran into an error with kustomization that I couldn't resolve. In the end, I decided to wipe the cluster, reinstall everything, and start over. This turned out to be a good opportunity to verify if my previous cluster setup instructions were accurate.
 
 ## Flux installation
 
-After minor inconviences I got this working by following the instruction below.
+After some minor inconveniences, I got this working by following the instructions below.
 
 ### Bootstrap Flux
 
-1. first of all, generate Github token and export variables:
+1. First, generate a GitHub token and export the variables:
 ```
 export GITHUB_USER=gregg127
 export GITHUB_TOKEN=<secret_token>
 ```
-2. install Flux on your laptop/PC:
+2. Install Flux on your laptop/PC:
 ```
 brew install fluxcd/tap/flux
 ```
-3. bootstrap Flux (this will install flux in the cluster and commit flux-system to the repo):
+3. Bootstrap Flux (this will install Flux in the cluster and commit the `flux-system` to the repo):
 ```
 flux bootstrap github \
   --owner=$GITHUB_USER \
@@ -31,7 +31,7 @@ flux bootstrap github \
   --path=./cluster-resources/infrastructure/flux \
   --personal
 ```
-which should end with:
+This should end with:
 ```
 ► connecting to github.com
 ► cloning branch "main" from Git repository "https://github.com/gregg127/anton.git"
@@ -66,7 +66,7 @@ which should end with:
 ✔ source-controller: deployment ready
 ✔ all components are healthy
 ```
-4. verify if kustomizations are in ready state:
+4. Verify if kustomizations are in a ready state:
 ```console
 flux get kustomizations
 ```
@@ -74,7 +74,7 @@ flux get kustomizations
 NAME       	REVISION          	SUSPENDED	READY	MESSAGE
 flux-system	main@sha1:910d044b	False    	True 	Applied revision: main@sha1:910d044b
 ```
-5. see the resources that were installed:
+5. See the resources that were installed:
 ```console
 kubectl get all,cm,secret,ing -n flux-system
 ```
@@ -110,10 +110,11 @@ secret/flux-system   Opaque   3      83m
 ```
 
 ### Deploy podinfo
-1. add [podinfo](https://artifacthub.io/packages/helm/podinfo/podinfo) service YAML with `GitRepository` and `Kustomization`, apply and verify:
+
+1. Add the [podinfo](https://artifacthub.io/packages/helm/podinfo/podinfo) service YAML with `GitRepository` and `Kustomization`, apply it, and verify:
 ```yaml
 # podinfo.yaml
-# This is an example on how Flux's GitRepository and Kustomization work
+# This is an example of how Flux's GitRepository and Kustomization work
 --- 
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
@@ -294,14 +295,13 @@ Events:
   Normal  ScalingReplicaSet  6m23s  deployment-controller  Scaled up replica set podinfo-6b885b7698 from 1 to 2
 ```
 !!! note
-    Note the podinfo deployment configuration. Everything from this came just from the YAML file containing `GitRepository` and `Kustomization`. This configuration along with other was taken from [https://github.com/stefanprodan/podinfo/tree/master/kustomize](https://github.com/stefanprodan/podinfo/tree/master/kustomize), where `kustomization.yaml` file location in the source repo is described by the `spec.path` parameter in `Kustomization`. The whole sense of this and GitOps is that the cluster listens on the changes in configured repo and applies them to the cluster if anything changes. So if anything will be pushed in podinfo repository, the cluster will detect that and apply changes.
+    Note the podinfo deployment configuration. Everything here came from the YAML file containing `GitRepository` and `Kustomization`. This configuration, along with others, was taken from [https://github.com/stefanprodan/podinfo/tree/master/kustomize](https://github.com/stefanprodan/podinfo/tree/master/kustomize), where the `kustomization.yaml` file location in the source repo is described by the `spec.path` parameter in `Kustomization`. The whole point of this and GitOps is that the cluster listens for changes in the configured repo and applies them to the cluster if anything changes. So, if anything is pushed to the podinfo repository, the cluster will detect it and apply the changes.
 
-Considering everything above, looks like the installation works fine.
-
+Considering everything above, it looks like the installation works fine.
 
 ## Static YAMLs migration  
 
-While working with Flux setup I wiped the cluster and deleted previously created:
+While working with the Flux setup, I wiped the cluster and deleted the previously created:
 
 * `nginx-ingress`
 * `cert-manager`
@@ -309,11 +309,11 @@ While working with Flux setup I wiped the cluster and deleted previously created
 * `anton-ingress`
 * `nginx` deployment
 
-Which were defined by static YAMLs. Now it's time to get them all back, but using Flux and Helm.
+These were defined by static YAMLs. Now it's time to bring them all back, but using Flux and Helm.
 
 ### nginx-ingress
 
-1. create YAML configuration for `nginx-service`:
+1. Create YAML configuration for `nginx-service`:
 ```yaml
 # nginx-ingress.yaml
 apiVersion: v1
@@ -358,7 +358,7 @@ spec:
       service:
         enabled: false
 ```
-2. apply the configuration:
+2. Apply the configuration:
 ```console
 kubectl apply -f nginx-ingress.yaml
 ```
@@ -367,7 +367,7 @@ namespace/ingress-nginx created
 helmrepository.source.toolkit.fluxcd.io/ingress-nginx created
 helmrelease.helm.toolkit.fluxcd.io/ingress-nginx created
 ```
-3. see resources that were added to the namespace:
+3. See resources that were added to the namespace:
 ```console
 kubectl get all -n ingress-nginx -o=wide
 ```
@@ -386,7 +386,7 @@ daemonset.apps/ingress-nginx-controller   3         3         3       3         
 
 ### cert-manager
 
-1. create YAML configuration for cert-manager:
+1. Create YAML configuration for cert-manager:
 ```yaml
 # cert-manager.yaml
 apiVersion: v1
@@ -422,7 +422,7 @@ spec:
   values:
     installCRDs: true
 ```
-2. apply the configuration:
+2. Apply the configuration:
 ```console
 kubectl apply -f cert-manager.yaml
 ```
@@ -431,7 +431,7 @@ namespace/cert-manager created
 helmrepository.source.toolkit.fluxcd.io/jetstack created
 helmrelease.helm.toolkit.fluxcd.io/cert-manager created
 ```
-3. see resources that were added to the namespace:
+3. See resources that were added to the namespace:
 ```console
 kubectl get all -n cert-manager -o=wide
 ```
@@ -458,7 +458,7 @@ replicaset.apps/cert-manager-webhook-54b5d8cb64      1         1         1      
 
 ### certification issuers
 
-1. create YAML configuration for cluster issuers:
+1. Create YAML configuration for cluster issuers:
 ```yaml
 # certificate-issuers.yaml
 apiVersion: cert-manager.io/v1
@@ -495,12 +495,11 @@ spec:
       name: letsencrypt-prod-private-key
     # Enable the HTTP-01 challenge provider
     solvers:
-    solvers:
       - http01:
           ingress:
             class: nginx
 ```
-2. apply the configuration:
+2. Apply the configuration:
 ```console
 kubectl apply -f certificate-issuers.yaml
 ```
@@ -508,7 +507,7 @@ kubectl apply -f certificate-issuers.yaml
 clusterissuer.cert-manager.io/letsencrypt-staging created
 clusterissuer.cert-manager.io/letsencrypt-prod created
 ```
-3. verify that ACME accounts were registered:
+3. Verify that ACME accounts were registered:
 ```console
 kubectl get clusterissuers -o=wide
 ```
@@ -520,7 +519,7 @@ letsencrypt-staging   True    The ACME account was registered with the ACME serv
 
 ### ingress
 
-1. restore and apply YAML configuration for Ingress. This remained unchanged:
+1. Restore and apply YAML configuration for Ingress. This remained unchanged:
 ```yaml
 # anton-ingress.yaml
 apiVersion: networking.k8s.io/v1
@@ -548,7 +547,7 @@ spec:
                 port:
                   number: 9898
 ```
-2. after some time verify that certificate was successfully created:
+2. After some time, verify that the certificate was successfully created:
 ```console
 kubectl get certificaterequests,certificates
 ```
@@ -559,7 +558,7 @@ certificaterequest.cert-manager.io/letsencrypt-prod-anton-tls-secret-47g6q   Tru
 NAME                                                            READY   SECRET                              AGE
 certificate.cert-manager.io/letsencrypt-prod-anton-tls-secret   True    letsencrypt-prod-anton-tls-secret   2m1s
 ```
-3. verify SSL:
+3. Verify SSL:
 ```
 curl https://anton.golebiowski.dev
 ```
@@ -580,23 +579,23 @@ curl https://anton.golebiowski.dev
 ```
 
 !!! note
-    DNS configuration was not mentioned in this chapter. Please remember that I use dynamic DNS and subdomain configuration set by my domain provider. This was description in the previous chapter.
+    DNS configuration was not mentioned in this chapter. Please remember that I use dynamic DNS and subdomain configuration set by my domain provider. This was described in the previous chapter.
 
 ## Summary
 To summarize what I did while working on this chapter:
 
-* removed all previous YAML manifests
-* wiped my cluster and set it up again
-* setup Flux and implemented GitOps
-* deployed podinfo as an example and testing application (replacement for nginx-unpriviliged)
-* restored and migrated nginx-ingress
-* restored and migrated cert-manager
-* restored and refactored cert issuers manifest(s)
-* restored ingress
+* Removed all previous YAML manifests.
+* Wiped my cluster and set it up again.
+* Set up Flux and implemented GitOps.
+* Deployed podinfo as an example and testing application (replacement for nginx-unprivileged).
+* Restored and migrated nginx-ingress.
+* Restored and migrated cert-manager.
+* Restored and refactored cert issuers manifest(s).
+* Restored ingress.
 
-Now the repository looks much better and a huge amount of code from previous static YAMLs was removed.
+Now the repository looks much better, and a huge amount of code from previous static YAMLs was removed.
 
-After this directory structure with my cluster resources looks like this:
+After this, the directory structure with my cluster resources looks like this:
 ```
 tree cluster-resources 
 ```

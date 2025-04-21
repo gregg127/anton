@@ -1,18 +1,18 @@
 # Storage
 
-After cleaning up now it's time for the next big step - storage implementation so that I can define `PersisentVolumeClaims`. After reasearch and considering size of my cluster, which is **3 nodes** and that each node **only has one disk** I decided to go with [Local Path Provisioner](https://github.com/rancher/local-path-provisioner). The drawback is that storage is not replicated and volumes will be bound to specific nodes. This will have to be considered when deploying services that use volumes.
+After cleaning up, it's time for the next big step—storage implementation so I can define `PersistentVolumeClaims`. After some research and considering the size of my cluster, which is **3 nodes**, and the fact that each node **only has one disk**, I decided to go with [Local Path Provisioner](https://github.com/rancher/local-path-provisioner). The drawback is that storage isn't replicated, and volumes will be bound to specific nodes. This will need to be considered when deploying services that use volumes.
 
-I do not want to get into too much details of my experiments, how Talos Linux occupies disks and what partitions it creates. Those can be read in the Github issues and Talos documentation. The final instruction to get what I wanted is:
+I don't want to get too deep into the details of my experiments, how Talos Linux occupies disks, and what partitions it creates. You can read about those in the GitHub issues and Talos documentation. Here's the final instruction to achieve what I wanted:
 
-1. first each machine has to be patched:
-      1. prepare variables:
+1. First, each machine has to be patched:
+   1. Prepare variables:
       ```console
       export MASTER_IP=172.16.0.103
       export NODENAME=worker0
       export NODE_IP=172.16.0.102
       ```
-      2. prepare machine patch, kubelet patches that were created are available in repo in directory `/cluster-config/patches/disk`
-      3. apply the patch, no reboot needed:
+   2. Prepare the machine patch. Kubelet patches that were created are available in the repo under `/cluster-config/patches/disk`.
+   3. Apply the patch—no reboot needed:
       ```console
       talosctl patch mc \
       --nodes $NODE_IP \
@@ -20,7 +20,7 @@ I do not want to get into too much details of my experiments, how Talos Linux oc
       --talosconfig=rendered/talosconfig \
       --patch @patches/disk/$NODENAME-create-data-partition.yml
       ```
-2. prepare and apply Local Path Provisioner YAML with path pointing to the destination included in machine patches and other configuration:
+2. Prepare and apply the Local Path Provisioner YAML with the path pointing to the destination included in the machine patches and other configuration:
 ```yaml
 # local-path-provisioner.yaml
 apiVersion: v1
@@ -59,7 +59,7 @@ spec:
     storageClass.defaultClass: true
     nodePathMap: [{"node": "DEFAULT_PATH_FOR_NON_LISTED_NODES", "paths": ["/var/local-path-provisioner"]}]
 ```
-1. installation above does not create `Persistent Volume Claims`, but should create `Storage Class`. Verify it:
+3. The installation above doesn't create `Persistent Volume Claims`, but it should create a `Storage Class`. Verify it:
 ```console
 kubectl get storageclass
 ```
@@ -67,7 +67,7 @@ kubectl get storageclass
 NAME         PROVISIONER                            RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 local-path   cluster.local/local-path-provisioner   Delete          WaitForFirstConsumer   true                   133m
 ```
-1. create and apply example PVC with deployment:
+4. Create and apply an example PVC with a deployment:
 ```yaml
 # nginx-pvc.yaml
 # Example deployment with attached PVC
@@ -114,10 +114,10 @@ spec:
           persistentVolumeClaim:
             claimName: nginx-local-volume-pvc
 ```
-1. verify that the PVC works by opening nginx's pod shell, creating file in mounted directory, restarting machines and checking if file persisted.
+5. Verify that the PVC works by opening the nginx pod shell, creating a file in the mounted directory, restarting the machines, and checking if the file persisted.
 
 !!! warning
-    Remember that this storage is not replicated and bound to a node.
+    Remember that this storage isn't replicated and is bound to a specific node.
 
 ---
 

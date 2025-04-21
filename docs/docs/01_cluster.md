@@ -1,44 +1,44 @@
 # Cluster setup
 
-**Talos Linux v1.9.5** will be used as an OS on all nodes. Before installing Talos on the machines make sure to install **talosctl** and **kubectl** on your laptop/PC:
+**Talos Linux v1.9.5** will be used as the OS on all nodes. Before installing Talos on the machines, make sure to install **talosctl** and **kubectl** on your laptop/PC:
 ```console
 brew install siderolabs/tap/talosctl
 ```
 ```console
 brew install kubernetes-cli
 ```
-and prepare USB drive with *bare-metal* Talos ISO image.
+and prepare a USB drive with the *bare-metal* Talos ISO image.
 
 ## Configuration patches
 
-Before setting up control plane and workers we need to prepare basic configuration patches for Talos. These consist of file with secrets and patches for nodes. To generate secret bundle file:
+Before setting up the control plane and workers, we need to prepare basic configuration patches for Talos. These consist of a file with secrets and patches for nodes. To generate the secret bundle file:
 ```console
 talosctl gen secrets -o secrets.yaml
 ```
-Apart from that repository contains patches:
+Apart from that, the repository contains patches:
 
-* `patch-overlord.yml` patch for control plane configuration
-* `patch-worker0.yml` patch for worker0 configuration
-* `patch-worker1.yml` patch for worker1 configuration
+* `patch-overlord.yml` - patch for control plane configuration
+* `patch-worker0.yml` - patch for worker0 configuration
+* `patch-worker1.yml` - patch for worker1 configuration
 
-These will be used as arguments for `talosctl gen config` command.
+These will be used as arguments for the `talosctl gen config` command.
 
-The most important change in patches is the *diskSelector* rule that matches the disk that Talos will be installed on based on model name expression. Without this Talos always installs on */dev/sda*. In my case when installing Talos on control plane node, this device was the USB Drive with Talos ISO. The goal is to install Talos on server's hard drive, so that USB Drive is not needed.
+The most important change in the patches is the *diskSelector* rule, which matches the disk that Talos will be installed on based on the model name expression. Without this, Talos always installs on */dev/sda*. In my case, when installing Talos on the control plane node, this device was the USB drive with the Talos ISO. The goal is to install Talos on the server's hard drive so that the USB drive is no longer needed.
 
 ## Control plane node setup
 
-To set up a server node, the following steps need to be followed:
+To set up a server node, follow these steps:
 
-1. in BIOS set secure boot configuration to **Legacy Support Disable and Secure Boot Disable**
-2. type in confirmation code to disable secure boot
-3. plug USB drive to rear USB port of the device
-4. boot from USB drive and wait for Talos to start and be in **READY** state
-5. with Talos started its time to setup master node and cluster:
-    1. save IP address to a variable (accessible from Talos dashboard):
+1. In BIOS, set the secure boot configuration to **Legacy Support Disable and Secure Boot Disable**.
+2. Type in the confirmation code to disable secure boot.
+3. Plug the USB drive into the rear USB port of the device.
+4. Boot from the USB drive and wait for Talos to start and reach the **READY** state.
+5. With Talos started, it's time to set up the master node and cluster:
+    1. Save the IP address to a variable (accessible from the Talos dashboard):
     ```console
     export MASTER_IP=172.16.0.103
     ```
-    2. generate control plane and Talos configuration using secrets and patch:
+    2. Generate the control plane and Talos configuration using the secrets and patch:
     ```console
     talosctl gen config \
     --with-secrets patches/secrets.yaml \
@@ -47,45 +47,45 @@ To set up a server node, the following steps need to be followed:
     --output rendered/ \
     anton https://$MASTER_IP:6443
     ```
-    3. apply the configuration to the machine (this step will trigger Talos installation to disk):
+    3. Apply the configuration to the machine (this step will trigger Talos installation to disk):
     ```console
     talosctl apply-config --insecure \
     --nodes $MASTER_IP \
     --file rendered/controlplane.yaml
     ```
-    4. wait for the installation to be complete, which will end with system restart
-    5. wait for Talos `Kubelet` to be in healthy state
-    6. having Talos ready, setup Kubernetes:
+    4. Wait for the installation to complete, which will end with a system restart.
+    5. Wait for Talos `Kubelet` to reach a healthy state.
+    6. With Talos ready, set up Kubernetes:
     ```console
     talosctl bootstrap \
     --nodes $MASTER_IP \
     --endpoints $MASTER_IP \
     --talosconfig=rendered/talosconfig
     ```
-    7. wait until all checkboxes under *controlplane* will be healthy and **READY** state will be true
-    8. shutdown the machine, unplug USB drive and start it again
-    9.  make sure everything works fine
+    7. Wait until all checkboxes under *controlplane* are healthy and the **READY** state is true.
+    8. Shut down the machine, unplug the USB drive, and start it again.
+    9. Make sure everything works fine:
     ```console
     talosctl health \
     --nodes $MASTER_IP \
     --endpoints $MASTER_IP \
     --talosconfig=rendered/talosconfig
     ```
-    10. setup kubectl configuration:
+    10. Set up the kubectl configuration:
     ```console
     talosctl kubeconfig \
     --nodes $MASTER_IP \
     --endpoints $MASTER_IP \
     --talosconfig=rendered/talosconfig
     ```
-    11. check kubernetes configuration:
+    11. Check the Kubernetes configuration:
     ```console
     kubectl cluster-info
     ```
     ```console
     kubectl get nodes -o=wide
     ```
-    12. access Talos dashboard remotely
+    12. Access the Talos dashboard remotely:
     ```console
     talosctl dashboard \
     --nodes $MASTER_IP \
@@ -93,21 +93,21 @@ To set up a server node, the following steps need to be followed:
     --talosconfig=rendered/talosconfig
     ```
 
-After all of the above cluster should be set up and ready to accept workers.
+After completing the above steps, the cluster should be set up and ready to accept workers.
 
 ## Worker node setup
 
-Now that cluster is setup with *controlplane* node it's time to add worker nodes:
+Now that the cluster is set up with the *controlplane* node, it's time to add worker nodes:
 
-1. first step is to setup the machine. For that steps 1-4 from the previous instruction must be followed.
-2. with Talos started on the machine it's time to configure a worker node:
-    1. save IP address to a variable (accessible from Talos dashboard) and save control plane IP:
+1. First, set up the machine. For that, follow steps 1-4 from the previous instructions.
+2. With Talos started on the machine, configure a worker node:
+    1. Save the IP address to a variable (accessible from the Talos dashboard) and save the control plane IP:
     ```console
     export WORKER_IP=172.16.0.102
     export WORKER=worker0
     export MASTER_IP=172.16.0.103
     ```
-    2. generate worker configuration using secrets and patch:
+    2. Generate the worker configuration using the secrets and patch:
     ```console
     talosctl gen config \
     --with-secrets patches/secrets.yaml \
@@ -116,23 +116,23 @@ Now that cluster is setup with *controlplane* node it's time to add worker nodes
     --output rendered/$WORKER.yaml \
     anton https://$WORKER_IP:6443
     ```
-    3. apply the configuration to the machine (this step will trigger Talos installation to disk):
+    3. Apply the configuration to the machine (this step will trigger Talos installation to disk):
     ```console
     talosctl apply-config --insecure \
     --nodes $WORKER_IP \
     --file rendered/$WORKER.yaml
     ```
-    4. wait for the installation to finish
-    5. once finished check if worker has successfully joined the cluster:
+    4. Wait for the installation to finish.
+    5. Once finished, check if the worker has successfully joined the cluster:
     ```console
     kubectl get nodes -o=wide
     ```
-    6. shutdown the machine, remove USB Drive and start the machine again
-    7. after some time check if the node is in **READY** status:
+    6. Shut down the machine, remove the USB drive, and start the machine again.
+    7. After some time, check if the node is in the **READY** status:
     ```console
     kubectl get nodes -o=wide
     ```
-    8. check the dashboard:
+    8. Check the dashboard:
     ```console
     talosctl dashboard \
     --nodes $WORKER_IP \
@@ -140,10 +140,9 @@ Now that cluster is setup with *controlplane* node it's time to add worker nodes
     --talosconfig=rendered/talosconfig 
     ```
 
-Instruction above works for single worker. Before adding another worker to the cluster you have to create a patch file 
-in `/cluster-config/patches` for the worker and change **WORKER_IP** and **WORKER** variables from the instruction.
+The instructions above work for a single worker. Before adding another worker to the cluster, you have to create a patch file in `/cluster-config/patches` for the worker and change the **WORKER_IP** and **WORKER** variables in the instructions.
 
-At this point I have 3 machines in my cluster - control plane and two workers. Everything is setup and ready to serve services.
+At this point, I have three machines in my cluster—a control plane and two workers. Everything is set up and ready to serve services.
 
 -----
 

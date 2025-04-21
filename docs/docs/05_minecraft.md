@@ -1,9 +1,9 @@
 # Minecraft
 
-With persistance layer I have all the pieces to setup some application that uses persistent volume claims. I chose Minecraft Bedrock server. Initial setup was quite simple, all I had to do was to prepare PVC and use [minecraft bedrock server](https://hub.docker.com/r/itzg/minecraft-bedrock-server) docker image with proper configuration.
+With the persistence layer in place, I have all the pieces to set up an application that uses persistent volume claims. I chose a Minecraft Bedrock server for this project. The initial setup was quite simple—all I had to do was prepare a PVC and use the [Minecraft Bedrock server](https://hub.docker.com/r/itzg/minecraft-bedrock-server) Docker image with the proper configuration.
 
 ## PVC
-YAML file with configuration of Persistent Volume Claim:
+Here’s the YAML file for the Persistent Volume Claim configuration:
 ```yaml
 # minecraft-pvc.yaml
 apiVersion: v1
@@ -22,15 +22,15 @@ spec:
       storage: 10Gi
 ```
 
-This configuration is stored in a separate file and is created once. What is worth noting is that PVC is assigned to a specific cluster node. Stateful set that will use this PVC will follow that and the application will be deployed on the same node.
+This configuration is stored in a separate file and is created once. One important thing to note is that the PVC is assigned to a specific cluster node. The StatefulSet that uses this PVC will follow that assignment, ensuring the application is deployed on the same node.
 
 ## Secrets 
-There are two environmental variables that I want to keep out of the Git repository:
+There are two environment variables that I want to keep out of the Git repository:
 
-1. players whitelist that contain usernames and identifiers of players allowed on the server
-2. identifier of players that have admin priviliges (operators)
+1. A players whitelist containing usernames and identifiers of players allowed on the server.
+2. Identifiers of players with admin privileges (operators).
 
-I decided to keep values of those in YAML **Secret**:
+I decided to store these values in a YAML **Secret**:
 ```yaml
 # minecraft-secrets.yaml
 apiVersion: v1
@@ -47,10 +47,10 @@ stringData:
   OPS: <secret>
 ```
 
-This file is encrypted using GPG and kept in the repository with proper values.
+This file is encrypted using GPG and kept in the repository with the proper values.
 
 ## Application YAML
-Main YAML file that contains **ConfigMap**, **StatefulSet** and **Service** looks like this:
+The main YAML file, which contains the **ConfigMap**, **StatefulSet**, and **Service**, looks like this:
 ```yaml
 # minecraft.yaml
 apiVersion: v1
@@ -172,7 +172,7 @@ spec:
 
 ## Backup
 
-Minecraft worlds should be backed up and kept in a separate storage in case of world corruption, PVC error or just accidental deletion. For now I decided to go with a simple script created with ChatGPT that creates a zip file with PVC content and copies it on my computer. This will be done properly in the future. The script content:
+Minecraft worlds should be backed up and stored separately in case of world corruption, PVC errors, or accidental deletion. For now, I’m using a simple script (created with ChatGPT) that creates a zip file of the PVC content and copies it to my computer. I’ll improve this process in the future. Here’s the script:
 ```sh
 #!/bin/bash
 
@@ -231,13 +231,13 @@ echo "✅ Backup complete: $LOCAL_BACKUP_FILE"
 
 ## Setup
 
-To sum up, in order to setup Minecraft server using the above you have to:
+To sum up, here’s how to set up the Minecraft server using the above configuration:
 
-1. Apply YAML PVC configuration - this will create storage for server data
-2. Apply YAML secrets - this will create secrets containing *ALLOW_LIST_USERS* and *OPS* variables
-3. Apply remaining YAML - this will create configuration map, stateful set that will take care of running pod with minecraft server and service so that the server can be connected to.
+1. Apply the YAML PVC configuration—this will create storage for server data.
+2. Apply the YAML secrets—this will create secrets containing the *ALLOW_LIST_USERS* and *OPS* variables.
+3. Apply the remaining YAML—this will create the ConfigMap, StatefulSet (to manage the Minecraft server pod), and Service (to allow connections to the server).
 
-If you need to do any changes YAML configurations with secrets and application can be deleted and applied as much as you need to. PVC is created once and cannot be deleted without data loss.
+If you need to make changes, you can delete and reapply the YAML configurations for secrets and the application as often as needed. However, the PVC is created once and cannot be deleted without losing data.
 
 ---
 
