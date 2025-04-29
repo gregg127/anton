@@ -11,11 +11,11 @@ All chapters before that are incremental, meaning that in some chapters I might 
 
 The table below lists the servers that are part of the cluster. Swipe the table to the right to see more details.
 
-| **Machine Name** | **Role(s)**           | **Model**              | **RAM** | **Storage** | **CPU**                          | **Graphics**          | **Idle PC** |
-| ---------------- | --------------------- | ---------------------- | ------- | ----------- | -------------------------------- | --------------------- | ----------- |
-| **overlord**     | control plane, worker | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
-| **worker0**      | worker                | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
-| **worker1**      | worker                | HP ProDesk 600 G3 Mini | 8 GB    | 512 GB HDD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 | 8–15 Watts  |
+| **Machine Name** | **Role(s)**           | **Model**              | **RAM** | **Storage** | **CPU**                          | **Graphics**          |
+| ---------------- | --------------------- | ---------------------- | ------- | ----------- | -------------------------------- | --------------------- |
+| **overlord**     | control plane, worker | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 |
+| **worker0**      | worker                | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 |
+| **worker1**      | worker                | HP ProDesk 600 G3 Mini | 8 GB    | 512 GB HDD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 |
 
 ## Kubernetes
 
@@ -28,4 +28,18 @@ I decided to use Talos Linux as the operating system for all the machines. I mad
 
 ## Costs
 
-TODO
+| Category             | Item                         | Description                                        | Qty | Unit Price | Total         |
+| -------------------- | ---------------------------- | -------------------------------------------------- | --- | ---------- | ------------- |
+| **Computers**        | HP ProDesk 600 G3 Mini       | 8GB RAM, 256GB SSD, one of the first 3 machines    | 1   | 290 PLN    | 290 PLN       |
+|                      | HP ProDesk 600 G3 Mini       | 8GB RAM, 256GB SSD, one of the first 3 machines    | 1   | 320 PLN    | 320 PLN       |
+|                      | HP ProDesk 600 G3 Mini       | 8GB RAM, 512GB HDD, one of the first 3 machines    | 1   | 284 PLN    | 284 PLN       |
+| **Power Monitoring** | LTC M1149                    | Wattmeter for cluster power consumption monitoring | 1   | 45 PLN     | 45 PLN        |
+| **Rack Equipment**   | Lanberg WF10-2309-10B        | 10", 9U black rack                                 | 1   | 162 PLN    | 162 PLN       |
+|                      | Lanberg rack shelves (1U)    | Shelves for the rack                               | 4   | 30 PLN     | 120 PLN       |
+|                      | Power strip / extension cord | 3m length, 5 sockets                               | 1   | 32 PLN     | 32 PLN        |
+| **Networking**       | TP-Link LS1005G              | 5-port Gigabit network switch                      | 1   | 45 PLN     | 45 PLN        |
+|                      | CCA UTP RJ45 LAN CAT.5 Cable | 20 meters of Ethernet cable                        | 1   | 25 PLN     | 25 PLN        |
+|                      | RJ45 crimping tool set       | Includes crimper, cable tester, and 50 RJ45 plugs  | 1   | 60 PLN     | 60 PLN        |
+|                      |                              |                                                    |     | **Total**  | **1,383 PLN** |
+
+Power consumption of the whole cluster is in range of **28-38 Watts**. This gives power consumption of around **X kilowatt-hours** per day, which costs me around **X PLN** per day.
