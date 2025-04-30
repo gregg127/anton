@@ -1,8 +1,9 @@
 # certificate-issuers.yaml
 apiVersion: cert-manager.io/v1
-kind: Issuer
+kind: ClusterIssuer
 metadata:
   name: letsencrypt-staging
+  namespace: cert-issuers
 spec:
   acme:
     # The ACME server URL
@@ -19,9 +20,10 @@ spec:
             class: nginx
 ---
 apiVersion: cert-manager.io/v1
-kind: Issuer
+kind: ClusterIssuer
 metadata:
   name: letsencrypt-prod
+  namespace: cert-issuers
 spec:
   acme:
     # The ACME server URL
@@ -32,7 +34,6 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod-private-key
     # Enable the HTTP-01 challenge provider
-    solvers:
     solvers:
       - http01:
           ingress:
