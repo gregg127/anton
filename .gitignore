@@ -4,5 +4,6 @@ cluster-config/rendered/*
 !cluster-config/rendered/README.md
 cluster-resources/services/minecraft/minecraft-secrets.yaml
 cluster-resources/infrastructure/harbor/harbor-secrets.yaml
+cluster-resources/services/registry-key/harbor-secrets-registry.yaml
 .DS_Store
 !*gpg
