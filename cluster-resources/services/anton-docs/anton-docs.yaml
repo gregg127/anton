@@ -1,0 +1,24 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: anton-docs
+spec:
+  interval: 1m30s # check for new commits every minute and 15 seconds and apply changes
+  ref:
+    branch: master
+  url: https://github.com/gregg127/anton
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: anton-docs
+spec:
+  path: ./docs/kustomization
+  interval: 30m0s
+  timeout: 3m0s
+  retryInterval: 2m0s
+  prune: true
+  targetNamespace: default
+  sourceRef:
+    kind: GitRepository
+    name: anton-docs
