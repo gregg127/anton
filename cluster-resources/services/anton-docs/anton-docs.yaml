@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 1m30s # check for new commits every minute and 15 seconds and apply changes
   ref:
-    branch: master
+    branch: main
   url: https://github.com/gregg127/anton
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
