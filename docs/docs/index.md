@@ -42,6 +42,6 @@ I decided to use Talos Linux as the operating system for all the machines. I mad
 |                      | RJ45 crimping tool set       | Includes crimper, cable tester, and 50 RJ45 plugs  | 1   | 60 PLN     | 60 PLN        |
 |                      |                              |                                                    |     | **Total**  | **1,383 PLN** |
 
-Power consumption of the whole cluster is in the range of **28–38 Watts**. 
-This results in a daily energy usage of around **0.69 kilowatt-hours**, as measured by the wattmeter after a full day of running the cluster.
-That costs me around **X PLN** per day.
+Power consumption of the whole cluster is in the range of **28–38 Watts**.  
+This results in a daily energy usage of approximately **0.68 kilowatt-hours**, as measured by the wattmeter after a full day of running the cluster.  
+I pay around **0.7669 PLN** per kilowatt-hour, which means running the cluster costs me about **0.53 PLN** per day and **15.90 PLN** per month.
