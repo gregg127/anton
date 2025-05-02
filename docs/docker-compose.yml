@@ -1,9 +1,0 @@
-version: '3.8'
-
-services:
-  anton-docs:
-    build: .
-    image: harbor.golebiowski.dev/services/anton-docs:latest
-    container_name: anton-docs
-    ports:
-      - "8080:8080"
