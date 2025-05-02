@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=1.0
+VERSION=1.1
 IMAGE_NAME=harbor.golebiowski.dev/services/anton-docs
 
 log() {
