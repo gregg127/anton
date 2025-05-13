@@ -1,55 +1,24 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
 metadata:
   name: homepage
-  labels:
-    app: homepage
 spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: homepage
-  template:
-    metadata:
-      labels:
-        app: homepage
-    spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 101
-        runAsGroup: 101
-        fsGroup: 101
-      containers:
-        - name: homepage
-          image: harbor.golebiowski.dev/services/homepage:latest
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-          resources:
-            requests:
-              memory: "64Mi"
-              cpu: "100m"
-            limits:
-              memory: "128Mi"
-              cpu: "200m"
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            seccompProfile:
-              type: RuntimeDefault
-      imagePullSecrets:
-        - name: harbor-registry-key
+  interval: 1m30s # check for new commits every minute and 15 seconds and apply changes
+  ref:
+    branch: main
+  url: https://github.com/gregg127/homepage
 ---
-apiVersion: v1
-kind: Service
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
 metadata:
-  name: homepage-service
+  name: homepage
 spec:
-  selector:
-    app: homepage
-  ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080
+  path: ./kustomization
+  interval: 30m0s
+  timeout: 3m0s
+  retryInterval: 2m0s
+  prune: true
+  targetNamespace: default
+  sourceRef:
+    kind: GitRepository
+    name: homepage
