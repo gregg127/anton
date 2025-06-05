@@ -1,0 +1,24 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: martialmatch-scraper
+spec:
+  interval: 1m30s # check for new commits every minute and 15 seconds and apply changes
+  ref:
+    branch: main
+  url: https://github.com/gregg127/martialmatch-scraper
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: martialmatch-scraper
+spec:
+  path: ./kustomization
+  interval: 30m0s
+  timeout: 3m0s
+  retryInterval: 2m0s
+  prune: true
+  targetNamespace: default
+  sourceRef:
+    kind: GitRepository
+    name: martialmatch-scraper
