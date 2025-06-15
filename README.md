@@ -9,7 +9,7 @@ This repository contains the complete configuration and documentation for my hom
 ## Repository Structure
 
 ```
-anton-config/
+anton/
 ├── cluster-config/        # Talos configuration files and patches
 ├── cluster-resources/     # Kubernetes resources and configurations
 │   ├── infrastructure/    # Core infrastructure components
