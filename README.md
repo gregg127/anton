@@ -21,10 +21,8 @@ anton-config/
 
 The documentation is published at [anton.golebiowski.dev](https://anton.golebiowski.dev).
 
-For a complete setup guide, refer to the [Quickstart](https://anton.golebiowski.dev/99_quickstart) documentation. For detailed, step-by-step instructions and explanations, start with the [Introduction](https://anton.golebiowski.dev).
+The documentation serves as my personal journal, providing a detailed, step-by-step description of how I built and configured the cluster. It captures my learning journey, including decisions made, problems encountered, and solutions implemented. 
 
-Full documentation is available in the `docs/` directory and can be served locally using:
-
-```bash
-./serve-docs.sh
-```
+> [!WARNING]
+> The documentation is written incrementally as I build and improve the cluster. This means that earlier chapters might contain approaches or decisions that were later revised or improved in subsequent chapters. The most up-to-date configuration should be available at [Quickstart](https://anton.golebiowski.dev/99_quickstart) guide.
+ 
