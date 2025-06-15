@@ -24,5 +24,5 @@ The documentation is published at [anton.golebiowski.dev](https://anton.golebiow
 The documentation serves as my personal journal, providing a detailed, step-by-step description of how I built and configured the cluster. It captures my learning journey, including decisions made, problems encountered, and solutions implemented. 
 
 > [!WARNING]
-> The documentation is written incrementally as I build and improve the cluster. This means that earlier chapters might contain approaches or decisions that were later revised or improved in subsequent chapters. The most up-to-date configuration should be available at [Quickstart](https://anton.golebiowski.dev/99_quickstart) guide.
+> The documentation is written incrementally as I build and improve the cluster. This means that earlier chapters might contain approaches or decisions that were later revised or improved in subsequent chapters. The most up-to-date configuration should be available at [Quickstart](https://anton.golebiowski.dev/99_quickstart/) guide.
  
