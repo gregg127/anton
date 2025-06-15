@@ -1,0 +1,10 @@
+machine:
+  install:
+    $patch: delete
+machine:
+  network:
+    hostname: worker3
+  install:
+    diskSelector:
+      model: KING*
+    wipe: true
