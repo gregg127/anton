@@ -9,3 +9,4 @@ cluster-resources/services/registry-key/harbor-secrets-registry.yaml
 cluster-resources/infrastructure/ddns/secret.yaml
 .DS_Store
 !*gpg
+local
