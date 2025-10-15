@@ -1,4 +1,6 @@
 # gitignore
+venv
+!venv/requirements.txt
 docs/site
 cluster-config/patches/secrets.yaml
 cluster-config/rendered/*
