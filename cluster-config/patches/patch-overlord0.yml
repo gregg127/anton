@@ -1,11 +1,13 @@
 machine:
-    type: worker
+    type: controlplane
     install:
         diskSelector:
-            model: WDC*
+            model: SAM*
         wipe: true
+cluster:
+  allowSchedulingOnControlPlanes: true
 ---
 apiVersion: v1alpha1
 kind: HostnameConfig
 auto: off
-hostname: worker1
+hostname: overlord0

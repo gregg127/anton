@@ -1,5 +1,8 @@
 # New cluster workers
 
+!!! warning
+    Deprecated
+
 I bought another two machines to have additional computational resources if needed. This chapter describes how I added new worker nodes to my existing cluster. The computers are HP ProDesk 600 G2 Mini with the following specifications:
 
 * 8GB RAM

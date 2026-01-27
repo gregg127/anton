@@ -1,10 +1,11 @@
 machine:
-  install:
-    $patch: delete
-machine:
-  network:
-    hostname: worker0
-  install:
-    diskSelector:
-      model: LIT*
-    wipe: true
+    type: worker
+    install:
+        diskSelector:
+            model: LIT*
+        wipe: true
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+auto: off
+hostname: worker0

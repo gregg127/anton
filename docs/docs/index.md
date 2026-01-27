@@ -13,9 +13,12 @@ The table below lists the servers that are part of the cluster. Swipe the table 
 
 | **Machine Name** | **Role(s)**           | **Model**              | **RAM** | **Storage** | **CPU**                          | **Graphics**          |
 | ---------------- | --------------------- | ---------------------- | ------- | ----------- | -------------------------------- | --------------------- |
-| **overlord**     | control plane, worker | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 |
+| **overlord0**    | control plane, worker | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 |
 | **worker0**      | worker                | HP ProDesk 600 G3 Mini | 8 GB    | 256 GB SSD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 |
 | **worker1**      | worker                | HP ProDesk 600 G3 Mini | 8 GB    | 512 GB HDD  | Intel i3-6100T, 3.20GHz, 2 cores | Intel HD Graphics 530 |
+| **worker2**      | worker                | HP ProDesk 600 G2 Mini | 8 GB    | 128 GB SSD  | Intel i5-6500T, 2.50Ghz, 4 cores | Intel HD Graphics 530 |
+| **worker3**      | worker                | HP ProDesk 600 G2 Mini | 8 GB    | 128 GB SSD  | Intel i5-6500T, 2.50Ghz, 4 cores | Intel HD Graphics 530 |
+
 
 ## Kubernetes
 
@@ -33,15 +36,18 @@ I decided to use Talos Linux as the operating system for all the machines. I mad
 | **Computers**        | HP ProDesk 600 G3 Mini       | 8GB RAM, 256GB SSD, one of the first 3 machines    | 1   | 290 PLN    | 290 PLN       |
 |                      | HP ProDesk 600 G3 Mini       | 8GB RAM, 256GB SSD, one of the first 3 machines    | 1   | 320 PLN    | 320 PLN       |
 |                      | HP ProDesk 600 G3 Mini       | 8GB RAM, 512GB HDD, one of the first 3 machines    | 1   | 284 PLN    | 284 PLN       |
+|                      | HP ProDesk 600 G2 Mini       | 8GB RAM, 128GB SSD, additional machine             | 1   | 200 PLN    | 200 PLN       |
+|                      | HP ProDesk 600 G2 Mini       | 8GB RAM, 128GB SSD, additional machine             | 1   | 200 PLN    | 200 PLN       |
 | **Power Monitoring** | LTC M1149                    | Wattmeter for cluster power consumption monitoring | 1   | 45 PLN     | 45 PLN        |
 | **Rack Equipment**   | Lanberg WF10-2309-10B        | 10", 9U black rack                                 | 1   | 162 PLN    | 162 PLN       |
-|                      | Lanberg rack shelves (1U)    | Shelves for the rack                               | 4   | 30 PLN     | 120 PLN       |
+|                      | Lanberg rack shelves (1U)    | Shelves for the rack                               | 6   | 30 PLN     | 180 PLN       |
 |                      | Power strip / extension cord | 3m length, 5 sockets                               | 1   | 32 PLN     | 32 PLN        |
-| **Networking**       | TP-Link LS1005G              | 5-port Gigabit network switch                      | 1   | 45 PLN     | 45 PLN        |
+| **Networking**       | TP-Link ER605                | Router                                             | 1   | 236 PLN    | 236 PLN       |
+|                      | Netgear GS108GE              | 8-port Gigabit network switch                      | 1   | 113 PLN    | 113 PLN       |
 |                      | CCA UTP RJ45 LAN CAT.5 Cable | 20 meters of Ethernet cable                        | 1   | 25 PLN     | 25 PLN        |
 |                      | RJ45 crimping tool set       | Includes crimper, cable tester, and 50 RJ45 plugs  | 1   | 60 PLN     | 60 PLN        |
-|                      |                              |                                                    |     | **Total**  | **1,383 PLN** |
+|                      |                              |                                                    |     | **Total**  | **2,347 PLN** |
 
-Power consumption of the whole cluster is in the range of **28–38 Watts**.  
-This results in a daily energy usage of approximately **0.68 kilowatt-hours**, as measured by the wattmeter after a full day of running the cluster.  
+Power consumption of the cluster with **3 computers running** is in the range of **28–38 Watts**.  
+This results in a daily energy usage of approximately **0.68 kilowatt-hours**, as measured by the wattmeter after 24 hours of running the cluster.  
 I pay around **0.7669 PLN** per kilowatt-hour, which means running the cluster costs me about **0.53 PLN** per day and **15.90 PLN** per month.
