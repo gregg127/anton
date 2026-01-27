@@ -6,8 +6,8 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: ./cluster-resources/services/podinfo # path within the Git repository
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system # references the GitRepository resource defined in gotk-sync.yaml
+  path: ./cluster-resources/services/podinfo # path within the Git repository
