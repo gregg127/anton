@@ -1,1 +1,1 @@
-This directory contains infrastructural resources that are necessary for my services to run, eg. Ingress controller configuration.
+This directory contains infrastructure resources that are necessary for my services/apps to run, e.g., Ingress controller configuration.

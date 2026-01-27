@@ -1,0 +1,1 @@
+This directory contains Flux GitOps configuration and resources. All resources in this directory are synced with the cluster by Flux using the GitOps workflow.

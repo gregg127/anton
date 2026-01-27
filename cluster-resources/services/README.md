@@ -1,1 +1,1 @@
-This directory contains my services that are deployed in the default namespace.
+This directory contains services/apps that are mainly deployed in the default namespace and are not part of the core cluster infrastructure.
