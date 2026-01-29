@@ -6,7 +6,7 @@ Instead of manually running `helm install` commands or maintaining static YAML f
 
 The cluster resources are organized into three main directories:
 
-* **flux/** - Contains Flux GitOps system configuration and bootstrapping files. The automatic GitOps sync is based on the files in this directory, which tell Flux what to monitor and deploy from the other directories.
+* **flux/** - Contains Flux GitOps system configuration and bootstrapping files. The automatic GitOps sync is based on the files in this directory, which tells Flux what to monitor and deploy from the other directories.
 * **infrastructure/** - Houses core cluster components like ingress controllers, cert-manager, etc.
 * **services/** - Stores application deployments and user-facing services/apps running on the cluster.
 
@@ -15,11 +15,7 @@ The cluster resources are organized into three main directories:
 
     Also running ```flux uninstall``` followed by ```flux bootstrap``` again helps between experimental retries. 
 
-## Flux installation
-
-After some minor inconveniences, I got this working by following the instructions below.
-
-### Bootstrap Flux
+## Bootstrap Flux
 
 1. Export your GitHub username:
 ```console
@@ -160,7 +156,7 @@ NAME                 TYPE     DATA   AGE
 secret/flux-system   Opaque   3      4m15s
 ```
 
-### Deploy podinfo in a GitOps manner
+## Deploy podinfo in a GitOps manner
 
 First, add the application definition to a dedicated directory in *services*:
 
@@ -248,9 +244,9 @@ podinfo-8b99d95f7-jdqfj   1/1     Running   0          15m
 
 ## Summary
 
-This chapter demonstrates implementing a complete GitOps workflow using Flux, where the key architectural requirement is proper directory separation and Flux configuration management. **For GitOps to work correctly, all Kustomization definitions that monitor infrastructure and services must be placed in the `flux/` directory**, while the actual resource definitions are organized separately in `infrastructure/` and `services/` directories - this separation allows Flux to automatically detect and apply changes from the Git repository to the cluster.
+This chapter demonstrates implementing a complete GitOps workflow using Flux. **For GitOps to work correctly, all Kustomization definitions that monitor infrastructure and services must be placed in the `flux/` directory**, while the actual resource definitions are organized separately in `infrastructure/` and `services/` directories. This separation allows Flux to automatically detect and apply changes from the Git repository to the cluster and allows user to store YAML files that will not be a part of GitOps workflow.
 
-The podinfo example in this chapter uses `GitRepository` and `Kustomization` for deployment, but it's important to note that exactly the same results can be achieved using `HelmRepository` and `HelmRelease` instead. The choice between these approaches depends on your use case: `GitRepository` is better suited for custom-made applications that reside in your repository and are not packaged as Helm charts, while the `HelmRepository` approach is often preferred for managing official Helm charts as it provides better versioning and configuration management capabilities. For comprehensive examples of this pattern, refer to the [Flux Helm example repository](https://github.com/fluxcd/flux2-kustomize-helm-example).
+The podinfo example in this chapter uses `GitRepository` and `Kustomization` for deployment, but it's important to note that exactly the same results can be achieved using `HelmRepository` and `HelmRelease` instead. The choice between these approaches depends on your use case: `GitRepository` is better suited for custom-made applications that reside in your repository and are not packaged as Helm charts, while the `HelmRepository` approach is often preferred for managing official Helm charts as it provides better versioning and configuration management capabilities. For example of using Helm to deploy PodInfo, refer to the [Flux Helm example repository](https://github.com/fluxcd/flux2-kustomize-helm-example).
 
 Sources:
 
