@@ -12,6 +12,7 @@ This repository contains the complete configuration and documentation for my hom
 anton/
 ├── cluster-config/        # Talos configuration files and patches
 ├── cluster-resources/     # Kubernetes resources and configurations
+│   ├── flux/              # Flux GitOps system configuration
 │   ├── infrastructure/    # Core infrastructure components
 │   └── services/          # Application services
 └── docs/                  # Full documentation and guides
