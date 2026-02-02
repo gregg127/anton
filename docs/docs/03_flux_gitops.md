@@ -239,8 +239,10 @@ kubectl get pods
 NAME                      READY   STATUS    RESTARTS   AGE
 podinfo-8b99d95f7-8fwdd   1/1     Running   0          15m
 podinfo-8b99d95f7-jdqfj   1/1     Running   0          15m
-
 ```
+
+!!!note
+    To manually test applications without committing changes to the repository, use `kubectl apply -k example-directory` to apply an entire directory to the cluster. The directory must contain a `kustomization.yaml` file that defines the resources to be applied.
 
 ## Secret Encryption with SOPS
 

@@ -1,25 +1,25 @@
-# Storage
+# Local Path Provisioner - persistent storage
 
-After cleaning up, it's time for the next big step—storage implementation so I can define `PersistentVolumeClaims`. After some research and considering the size of my cluster, which is **3 nodes**, and the fact that each node **only has one disk**, I decided to go with [Local Path Provisioner](https://github.com/rancher/local-path-provisioner). The drawback is that storage isn't replicated, and volumes will be bound to specific nodes. This will need to be considered when deploying services that use volumes.
+In order to enable persistent storage for application state and data, I need to be able to use `PersistentVolumeClaims` in YAML manifests. After some research and considering the size of my cluster, which is **5 nodes**, and the fact that each node **only has one disk**, I decided to go with [Local Path Provisioner](https://github.com/rancher/local-path-provisioner). The drawback is that storage isn't replicated, and volumes will be bound to specific nodes. This will need to be considered when deploying services that use volumes.
 
-I don't want to get too deep into the details of my experiments, how Talos Linux occupies disks, and what partitions it creates. You can read about those in the GitHub issues and Talos documentation. Here's the final instruction to achieve what I wanted:
+This guide focuses on the implementation steps rather than the detailed exploration of Talos Linux disk management and partitioning schemes. For comprehensive information on these topics, refer to the GitHub issues and official Talos documentation (links provided in the sources section below). The following steps outline the configuration process:
 
-1. First, each machine has to be patched:
-   1. Prepare variables:
-      ```console
-      export MASTER_IP=172.16.0.103
-      export NODENAME=worker0
-      export NODE_IP=172.16.0.102
-      ```
-   2. Prepare the machine patch. Kubelet patches that were created are available in the repo under `/cluster-config/patches/disk`.
-   3. Apply the patch—no reboot needed:
-      ```console
-      talosctl patch mc \
-      --nodes $NODE_IP \
-      --endpoints $MASTER_IP \
-      --talosconfig=rendered/talosconfig \
-      --patch @patches/disk/$NODENAME-create-data-partition.yml
-      ```
+1. First, patch **each machine** (including the control plane node):
+    1. Prepare variables:
+        ```console
+        export MASTER_IP=<control_plane_ip>
+        export NODE_NAME=<worker_hostname>
+        export NODE_IP=<worker_ip>
+        ```
+    2. Prepare the machine patch. Kubelet patches that were created are available in the repo under `/cluster-config/patches/disk`.
+    3. Apply the patch - no reboot needed:
+        ```console
+        talosctl patch mc \
+          --nodes $NODE_IP \
+          --endpoints $MASTER_IP \
+          --talosconfig=rendered/talosconfig \
+          --patch @patches/disk/$NODE_NAME-create-data-partition.yml
+        ```
 2. Prepare and apply the Local Path Provisioner YAML with the path pointing to the destination included in the machine patches and other configuration:
 ```yaml
 # local-path-provisioner.yaml
