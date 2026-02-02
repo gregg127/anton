@@ -5,7 +5,6 @@ docs/site
 cluster-config/patches/secrets.yaml
 cluster-config/rendered/*
 !cluster-config/rendered/README.md
-cluster-resources/services/podinfo/secret.yaml
 cluster-resources/services/minecraft/minecraft-secrets.yaml
 cluster-resources/infrastructure/harbor/harbor-secrets.yaml
 cluster-resources/services/registry-key/harbor-secrets-registry.yaml
