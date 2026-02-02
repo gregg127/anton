@@ -1,6 +1,12 @@
 # Repository SOPS configuration, rules on how to encrypt specific files
 ---
 creation_rules:
+  - path_regex: cluster-resources/infrastructure/.*/.*.yaml
+    encrypted_regex: ^(data|stringData)$
+    pgp: >-
+      EA65B90F135CF8C5E331DA40C87A0BEB390664D3,
+      D25B7C5D2B5FE33FAB3EBF4BCB6E270ECA40D3A0
+
   - path_regex: cluster-resources/services/.*/.*.yaml
     encrypted_regex: ^(data|stringData)$
     pgp: >-
