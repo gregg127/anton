@@ -4,9 +4,11 @@ creation_rules:
   - path_regex: cluster-resources/services/.*/.*.yaml
     encrypted_regex: ^(data|stringData)$
     pgp: >-
-      EA65B90F135CF8C5E331DA40C87A0BEB390664D3
-      
+      EA65B90F135CF8C5E331DA40C87A0BEB390664D3,
+      D25B7C5D2B5FE33FAB3EBF4BCB6E270ECA40D3A0
+
   - path_regex: cluster-config/patches/secrets.yaml
     encrypted_regex: ^(secret|bootstraptoken|secretboxencryptionsecret|token|key)$
     pgp: >-
-      EA65B90F135CF8C5E331DA40C87A0BEB390664D3
+      EA65B90F135CF8C5E331DA40C87A0BEB390664D3,
+      D25B7C5D2B5FE33FAB3EBF4BCB6E270ECA40D3A0
