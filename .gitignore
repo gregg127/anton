@@ -2,7 +2,6 @@
 venv
 !venv/requirements.txt
 docs/site
-cluster-config/patches/secrets.yaml
 cluster-config/rendered/*
 !cluster-config/rendered/README.md
 cluster-resources/services/minecraft/minecraft-secrets.yaml
