@@ -426,6 +426,8 @@ The podinfo example in this chapter uses `GitRepository` and `Kustomization` for
 
 Additionally, this chapter covers secret management using [SOPS (Secrets OPerationS)](https://github.com/getsops/sops) for encrypting sensitive data before storing it in Git repositories, ensuring secure GitOps workflows.
 
+-----
+
 Sources:
 
 * [https://fluxcd.io/flux/concepts/](https://fluxcd.io/flux/concepts/)

@@ -1,4 +1,4 @@
-# Ingress, DNS, Cloudflare
+# Ingress, DNS, Cloudflare, certification
 
 After many experiments, research and considering that I am working with a **bare metal** cluster, I made the following decisions for external cluster accessibility:
 
@@ -328,6 +328,356 @@ Configuration parameters:
 - `<token>` - Generate this by navigating to the User API tokens page and creating a token from the **Edit zone DNS** template
 
 All files are available in the project repository. Since the deployment is managed by Flux, an additional YAML file must be created to deploy the service to the cluster using GitOps methodology, similar to the process described in the *Nginx Ingress* section.
+
+## TLS Certificates
+
+For managing certificates and issuers, I use [cert-manager](https://cert-manager.io). Certificates are automatically provisioned through Let's Encrypt. The following steps demonstrate how to configure this system:
+
+### Setup cert-manager and certificate issuers
+
+1. Prepare *cert-manager* Helm YAML configuration files in the `cluster-resources/infrastructure/cert-manager` directory. This directory contains the *HelmRepository*, *HelmRelease*, and appropriate namespace definitions.
+
+2. Apply the configuration to the cluster:
+```console
+kubectl apply -k cluster-resources/infrastructure/cert-manager
+```
+
+3. Verify that the changes were applied successfully:
+```console
+kubectl get all -n cert-manager
+```
+```
+NAME                                           READY   STATUS    RESTARTS   AGE
+pod/cert-manager-6fc7c98586-jj9nv              1/1     Running   0          6m24s
+pod/cert-manager-cainjector-6d5fcb7b56-vpj6z   1/1     Running   0          6m24s
+pod/cert-manager-webhook-5cf564fd96-qsj2r      1/1     Running   0          6m24s
+
+NAME                           TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/cert-manager           ClusterIP   10.98.2.243      <none>        9402/TCP   6m24s
+service/cert-manager-webhook   ClusterIP   10.103.177.147   <none>        443/TCP    6m24s
+
+NAME                                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/cert-manager              1/1     1            1           6m24s
+deployment.apps/cert-manager-cainjector   1/1     1            1           6m24s
+deployment.apps/cert-manager-webhook      1/1     1            1           6m24s
+
+NAME                                                 DESIRED   CURRENT   READY   AGE
+replicaset.apps/cert-manager-6fc7c98586              1         1         1       6m24s
+replicaset.apps/cert-manager-cainjector-6d5fcb7b56   1         1         1       6m24s
+replicaset.apps/cert-manager-webhook-5cf564fd96      1         1         1       6m24s
+```
+
+4. Prepare certificate issuer configuration files in the `cluster-resources/infrastructure/cert-issuers` directory. This directory contains staging and production certificate issuers along with the appropriate namespace configuration.
+
+5. Apply the issuer configuration to the cluster:
+```console
+kubectl apply -k cluster-resources/infrastructure/cert-issuers
+```
+
+6. Verify that the cluster issuers were created successfully:
+```console
+kubectl get clusterissuer
+```
+```
+NAME                  READY   AGE
+letsencrypt-prod      True    2m31s
+letsencrypt-staging   True    2m31s
+```
+
+!!!note 
+    The staging issuer is used for testing purposes due to rate limiting restrictions on the Let's Encrypt production server. The **Ingress** resource is responsible for creating certificate requests automatically. All certificate provisioning occurs automatically after **Ingress** creation.
+
+### Create example service with TLS
+
+The following example demonstrates deploying a service that will be accessible from the internet with automatic TLS certificate provisioning:
+
+1. **Prerequisites**: Ensure that the domain you will be using is properly configured and points to your cluster. In this example, `golebiowski.dev` is configured in Cloudflare with DNS entries pointing to the cluster network.
+
+2. Create a YAML file with an example application and Ingress configuration:
+```yaml
+# nginx-tls-test.yaml
+---
+# deployment definition for nginx 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+      containers:
+        - name: nginx
+          image: nginxinc/nginx-unprivileged:1.27.4
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+---
+# service definition so that nginx pods are accessible within the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+# ingress definition to expose nginx service outside the cluster
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: anton-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - golebiowski.dev
+      secretName: letsencrypt-prod-nginx-tls-secret
+  rules:
+    - host: golebiowski.dev 
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port:
+                  number: 8080
+```
+note important Ingress configuration values:
+    - `cert-manager.io/cluster-issuer`: points to the certificate issuer (letsencrypt-prod)
+    - `tls.hosts`: domain for which the certificate will be issued
+    - `tls.secretName`: this configuration creates a secret to store the certificate
+
+3. Apply the YAML configuration to the cluster:
+```console
+kubectl apply -f nginx-tls-test.yaml
+```
+
+4. Verify that the TLS secret was created:
+```console
+kubectl get secrets
+```
+```
+NAME                                      TYPE     DATA   AGE
+letsencrypt-prod-nginx-tls-secret-xzsxh   Opaque   1      3s
+...
+```
+
+5. Verify that the certificate was created:
+```console
+kubectl get certificates
+```
+```
+NAME                                READY   SECRET                              AGE
+letsencrypt-prod-nginx-tls-secret   True    letsencrypt-prod-nginx-tls-secret   65s
+```
+
+6. Verify that the certificate was successfully issued:
+```console
+kubectl describe certificate letsencrypt-prod-nginx-tls-secret
+```
+```
+Name:         letsencrypt-prod-nginx-tls-secret
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+API Version:  cert-manager.io/v1
+Kind:         Certificate
+Metadata:
+  Creation Timestamp:  2026-02-02T18:48:47Z
+  Generation:          1
+  Owner References:
+    API Version:           networking.k8s.io/v1
+    Block Owner Deletion:  true
+    Controller:            true
+    Kind:                  Ingress
+    Name:                  anton-ingress
+    UID:                   849937f9-c4ca-4f11-994d-60ff363c5b16
+  Resource Version:        399902
+  UID:                     b9c83066-26e2-44d2-b817-d43870b36f30
+Spec:
+  Dns Names:
+    golebiowski.dev
+  Issuer Ref:
+    Group:      cert-manager.io
+    Kind:       ClusterIssuer
+    Name:       letsencrypt-prod
+  Secret Name:  letsencrypt-prod-nginx-tls-secret
+  Usages:
+    digital signature
+    key encipherment
+Status:
+  Conditions:
+    Last Transition Time:  2026-02-02T18:49:17Z
+    Message:               Certificate is up to date and has not expired
+    Observed Generation:   1
+    Reason:                Ready
+    Status:                True
+    Type:                  Ready
+  Not After:               2026-05-03T17:50:43Z
+  Not Before:              2026-02-02T17:50:44Z
+  Renewal Time:            2026-04-03T17:50:43Z
+  Revision:                1
+Events:
+  Type    Reason     Age   From                                       Message
+  ----    ------     ----  ----                                       -------
+  Normal  Issuing    2m2s  cert-manager-certificates-trigger          Issuing certificate as Secret does not exist
+  Normal  Generated  2m1s  cert-manager-certificates-key-manager      Stored new private key in temporary Secret resource "letsencrypt-prod-nginx-tls-secret-xzsxh"
+  Normal  Requested  2m1s  cert-manager-certificates-request-manager  Created new CertificateRequest resource "letsencrypt-prod-nginx-tls-secret-9j2xk"
+  Normal  Issuing    92s   cert-manager-certificates-issuing          The certificate has been successfully issued
+```
+
+7. As an additional check add an entry to `/etc/hosts` for the domain so that requests go directly to the cluster from your local machine:
+```
+<control_plane_ip> golebiowski.dev
+```
+
+8. Verify the certificate using OpenSSL:
+```console
+openssl s_client -showcerts -connect golebiowski.dev:443 </dev/null
+```
+```
+CONNECTED(00000003)
+depth=2 C = US, O = Internet Security Research Group, CN = ISRG Root X1
+verify return:1
+depth=1 C = US, O = Let's Encrypt, CN = R12
+verify return:1
+depth=0 CN = golebiowski.dev
+verify return:1
+---
+Certificate chain
+ 0 s:CN = golebiowski.dev
+   i:C = US, O = Let's Encrypt, CN = R12
+   a:PKEY: rsaEncryption, 2048 (bit); sigalg: RSA-SHA256
+   v:NotBefore: Feb  2 17:50:44 2026 GMT; NotAfter: May  3 17:50:43 2026 GMT
+-----BEGIN CERTIFICATE-----
+MIIFAzCCA+ugAwIBAgISBskH9gXccrdALc1rB8twXfz8MA0GCSqGSIb3DQEBCwUA
+MDMxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQD
+EwNSMTIwHhcNMjYwMjAyMTc1MDQ0WhcNMjYwNTAzMTc1MDQzWjAaMRgwFgYDVQQD
+Ew9nb2xlYmlvd3NraS5kZXYwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQC2OUeEvuNtiNU9d/CQEEwfLKWx0195Nmro3AKbe/OdQ92q090ZO8GGOGBF7t6Q
+CuNeFmuYsS8OvbMV7PwZh/u9nqW9aSK/Jg6KIZMV/zr2GVO8LugRQLCwPlNTPPXT
+3W8wnmdvJ/b3HowHrsyCpOPXahIst4kGJiWslPNLHRU2XP7RcO3KP41utFaNXW7A
+4spLwGHBKvEvrJ/X0BpZpE32MGlsZmB7grjO31oTTTZdBmJbioQJmDvIyym8jx5U
+LwJEzMKZy6iZRUodGAHbuDxGLRhGaAl6WKEtbar8J0seGWaFA/kbbnqhivmB1T1U
+PPQvyj6gyqyuTc65JW00HKcFAgMBAAGjggIoMIICJDAOBgNVHQ8BAf8EBAMCBaAw
+HQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHQYD
+VR0OBBYEFDx0padRkXPnINg0eLt9ejHPVMBJMB8GA1UdIwQYMBaAFAC1KfItjm8x
+6JtMrXg++tzpDNHSMDMGCCsGAQUFBwEBBCcwJTAjBggrBgEFBQcwAoYXaHR0cDov
+L3IxMi5pLmxlbmNyLm9yZy8wGgYDVR0RBBMwEYIPZ29sZWJpb3dza2kuZGV2MBMG
+A1UdIAQMMAowCAYGZ4EMAQIBMC8GA1UdHwQoMCYwJKAioCCGHmh0dHA6Ly9yMTIu
+Yy5sZW5jci5vcmcvMTI1LmNybDCCAQwGCisGAQQB1nkCBAIEgf0EgfoA+AB+AOMj
+jfKNoojgquCs8PqQyYXwtr/10qUnsAH8HERYxLboAAABnB+wAhwACAAABQAxSaB0
+BAMARzBFAiAMkgokpBFsz6COIEfdx8478UWFjwVw3CgEBSCtoGihYwIhAOj59a6E
+ib9qU4ptB+9loYx96prHa6+Q6AGj95CX61+UAHYADleUvPOuqT4zGyyZB7P3kN+b
+wj1xMiXdIaklrGHFTiEAAAGcH7AJxgAABAMARzBFAiEAqyR4GsBhvzaRZxSmjDAW
+dFW6oa6NSgk/hXsRRuW2Ju0CIAfoqJoNaSmmVPke7ibaU0a6v8Cb0uQ5jff8stfp
+gVDdMA0GCSqGSIb3DQEBCwUAA4IBAQBhB0VoJNIMGimQBRQ+jwxNumqaBL/ZWqub
+YKCWtYyBx+tXUVwPwgYun1fenUPEWmtl8Udd5zBLAvanW4afRG6iFgMO/mmGV4dO
+lIMCC5cNOa6Kqgk3qDgW9nP9t/pEikM9L6qFVnwKqOoP7crCDXA8dh9Z1zuvKgvG
+zSF40pfz4lFybqrUddcdyD5m39WGIi5GGhlUB019HhJG6sjNG6f8HWyMWuwTVacI
+b8ozsuNgcMepaZHc7TF+GB9287oYO7Ak4iSQOyg1KLc/yJMgPfgYezWSFCgoPp6J
+MAt6VaAxtTUur8UOPEZOupTCLPxcBPk5/k6ns7W5OQYZzbn9BaOg
+-----END CERTIFICATE-----
+ 1 s:C = US, O = Let's Encrypt, CN = R12
+   i:C = US, O = Internet Security Research Group, CN = ISRG Root X1
+   a:PKEY: rsaEncryption, 2048 (bit); sigalg: RSA-SHA256
+   v:NotBefore: Mar 13 00:00:00 2024 GMT; NotAfter: Mar 12 23:59:59 2027 GMT
+-----BEGIN CERTIFICATE-----
+MIIFBjCCAu6gAwIBAgIRAMISMktwqbSRcdxA9+KFJjwwDQYJKoZIhvcNAQELBQAw
+TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
+cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMjQwMzEzMDAwMDAw
+WhcNMjcwMzEyMjM1OTU5WjAzMQswCQYDVQQGEwJVUzEWMBQGA1UEChMNTGV0J3Mg
+RW5jcnlwdDEMMAoGA1UEAxMDUjEyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
+CgKCAQEA2pgodK2+lP474B7i5Ut1qywSf+2nAzJ+Npfs6DGPpRONC5kuHs0BUT1M
+5ShuCVUxqqUiXXL0LQfCTUA83wEjuXg39RplMjTmhnGdBO+ECFu9AhqZ66YBAJpz
+kG2Pogeg0JfT2kVhgTU9FPnEwF9q3AuWGrCf4yrqvSrWmMebcas7dA8827JgvlpL
+Thjp2ypzXIlhZZ7+7Tymy05v5J75AEaz/xlNKmOzjmbGGIVwx1Blbzt05UiDDwhY
+XS0jnV6j/ujbAKHS9OMZTfLuevYnnuXNnC2i8n+cF63vEzc50bTILEHWhsDp7CH4
+WRt/uTp8n1wBnWIEwii9Cq08yhDsGwIDAQABo4H4MIH1MA4GA1UdDwEB/wQEAwIB
+hjAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwEwEgYDVR0TAQH/BAgwBgEB
+/wIBADAdBgNVHQ4EFgQUALUp8i2ObzHom0yteD763OkM0dIwHwYDVR0jBBgwFoAU
+ebRZ5nu25eQBc4AIiMgaWPbpm24wMgYIKwYBBQUHAQEEJjAkMCIGCCsGAQUFBzAC
+hhZodHRwOi8veDEuaS5sZW5jci5vcmcvMBMGA1UdIAQMMAowCAYGZ4EMAQIBMCcG
+A1UdHwQgMB4wHKAaoBiGFmh0dHA6Ly94MS5jLmxlbmNyLm9yZy8wDQYJKoZIhvcN
+AQELBQADggIBAI910AnPanZIZTKS3rVEyIV29BWEjAK/duuz8eL5boSoVpHhkkv3
+4eoAeEiPdZLj5EZ7G2ArIK+gzhTlRQ1q4FKGpPPaFBSpqV/xbUb5UlAXQOnkHn3m
+FVj+qYv87/WeY+Bm4sN3Ox8BhyaU7UAQ3LeZ7N1X01xxQe4wIAAE3JVLUCiHmZL+
+qoCUtgYIFPgcg350QMUIWgxPXNGEncT921ne7nluI02V8pLUmClqXOsCwULw+PVO
+ZCB7qOMxxMBoCUeL2Ll4oMpOSr5pJCpLN3tRA2s6P1KLs9TSrVhOk+7LX28NMUlI
+usQ/nxLJID0RhAeFtPjyOCOscQBA53+NRjSCak7P4A5jX7ppmkcJECL+S0i3kXVU
+y5Me5BbrU8973jZNv/ax6+ZK6TM8jWmimL6of6OrX7ZU6E2WqazzsFrLG3o2kySb
+zlhSgJ81Cl4tv3SbYiYXnJExKQvzf83DYotox3f0fwv7xln1A2ZLplCb0O+l/AK0
+YE0DS2FPxSAHi0iwMfW2nNHJrXcY3LLHD77gRgje4Eveubi2xxa+Nmk/hmhLdIET
+iVDFanoCrMVIpQ59XWHkzdFmoHXHBV7oibVjGSO7ULSQ7MJ1Nz51phuDJSgAIU7A
+0zrLnOrAj/dfrlEWRhCvAgbuwLZX1A2sjNjXoPOHbsPiy+lO1KF8/XY7
+-----END CERTIFICATE-----
+---
+Server certificate
+subject=CN = golebiowski.dev
+issuer=C = US, O = Let's Encrypt, CN = R12
+---
+No client certificate CA names sent
+Peer signing digest: SHA256
+Peer signature type: RSA-PSS
+Server Temp Key: X25519, 253 bits
+---
+SSL handshake has read 3142 bytes and written 397 bytes
+Verification: OK
+---
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Server public key is 2048 bit
+Secure Renegotiation IS NOT supported
+Compression: NONE
+Expansion: NONE
+No ALPN negotiated
+Early data was not sent
+Verify return code: 0 (ok)
+---
+DONE
+```
+9. Cleanup: 
+    * remove the entry from the `/etc/hosts` file
+    * remove the test Nginx deployment:
+    ```console
+    kubectl delete -f nginx-tls-test.yaml
+    ```
+10. Add new YAML files for *cert-manager* and *cert-issuers* for Flux system.
 
 -----
 
