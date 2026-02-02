@@ -1,4 +1,4 @@
-# Flux, Helm, GitOps
+# Flux, Helm, GitOps, SOPS
 
 To avoid cluttering the repository with copy-pasted YAML manifests from external sources, I decided to use [Helm](https://helm.sh) charts managed through [Flux](https://fluxcd.io) GitOps workflows.
 
@@ -242,18 +242,195 @@ podinfo-8b99d95f7-jdqfj   1/1     Running   0          15m
 
 ```
 
+## Secret Encryption with SOPS
+
+Services and infrastructure components often require secret values such as API keys, passwords, and certificates. These secrets are typically stored as separate YAML files. Using SOPS (Secrets OPerationS), these secret files can be partially encrypted before committing them to the repository. The cluster must contain a GPG secret key to decrypt secrets committed to the repository.
+
+### Generate GPG keys for the cluster
+
+1. Install SOPS and GnuPG:
+```console
+brew install gnupg sops
+```
+Alternatively, install using the instructions at [https://github.com/getsops/sops/releases](https://github.com/getsops/sops/releases)
+2. Create GPG keys for the cluster:
+```console
+export KEY_NAME="anton"                  
+export KEY_COMMENT="secrets"     
+
+gpg --batch --full-generate-key <<EOF
+%no-protection
+Key-Type: 1
+Key-Length: 4096
+Subkey-Type: 1
+Subkey-Length: 4096
+Expire-Date: 0
+Name-Comment: ${KEY_COMMENT}
+Name-Real: ${KEY_NAME}
+EOF
+```
+3. Retrieve the generated key fingerprint:
+```console
+gpg --list-keys $KEY_NAME
+```
+This should output something similar to:
+```
+pub   rsa4096 2026-02-02 [SCEAR]
+      EA65B90F135CF8C5E331DA40C87A0BEB390664D3
+uid           [ultimate] anton (secrets)
+sub   rsa4096 2026-02-02 [SEA]
+```
+4. Store the fingerprint in a variable:
+```console
+export KEY_FP=EA65B90F135CF8C5E331DA40C87A0BEB390664D3
+```
+
+### Create SOPS Configuration and encrypt example file
+
+The repository will contain a SOPS configuration file to guide encryption and decryption of specific files. This configuration can be extended as needed.
+
+1. Create `.sops.yaml` configuration file in the repository root directory:
+```yaml
+# Repository SOPS configuration, rules on how to encrypt specific files
+---
+creation_rules:
+  - path_regex: cluster-resources/services/.*/.*.yaml
+    encrypted_regex: ^(data|stringData)$
+    pgp: >-
+      EA65B90F135CF8C5E331DA40C87A0BEB390664D3
+```
+**Important**: According to the [Flux SOPS guide](https://fluxcd.io/flux/guides/mozilla-sops/), only `data` and `stringData` fields should be encrypted for Kubernetes Secrets. Encrypting metadata, kind, or apiVersion fields is not supported by Flux's kustomize-controller.
+2. Create a new secret file (example: `cluster-resources/services/podinfo/secret.yaml`):
+```yaml
+# secret to test SOPS encryption
+apiVersion: v1
+kind: Secret
+metadata:
+    name: podinfo-secret
+    namespace: default
+type: Opaque
+stringData:
+    SECRET: top-secret-data
+```
+3. Encrypt the file (SOPS will encrypt and decrypt files based on the configuration file added above):
+```console
+sops --encrypt --in-place cluster-resources/services/podinfo/secret.yaml
+```
+This should transform the file from plain YAML to an encrypted version suitable for repository storage:
+```yaml
+# secret to test SOPS encryption
+apiVersion: v1
+kind: Secret
+metadata:
+    name: podinfo-secret
+    namespace: default
+type: Opaque
+stringData:
+    SECRET: ENC[AES256_GCM,data:ESqjM6ruXUTZFZ7mx7Nz,iv:FkwfWjugSAOg4TOaRzDKDCgTmcV2FnaMVRKaQHlvdw8=,tag:dA91YwE3jFomXTemWDKvMw==,type:str]
+sops:
+    lastmodified: "2026-02-02T13:16:24Z"
+    mac: ENC[AES256_GCM,data:0T/vLQZjLojGXqa21BWJ9c/uEy0/BOfg5GWX5lwm0fi0kHKAw5KX6oPjcshOxVlnsbu4sz7/SHeA0+j+eGFdybxtvOj8mlYcI59ZA08KDj63RzexYqzBty3ZwJYEIZWYTD5Fl1ISwauxeC3edWfJMDH/qv/6JhOuPYiXYxtUDtE=,iv:8InrOB2SUrIAwMKDJvyQK+CIF+uXF8EXfY2xr55ddqw=,tag:ocyyut39S/IzAn82FpSp9A==,type:str]
+    pgp:
+        - created_at: "2026-02-02T13:16:24Z"
+          enc: |-
+            -----BEGIN PGP MESSAGE-----
+
+            hQIMAwSeVs53q4TjARAAr0P5Rcy0cfdMElDd3OFqrylfSfF0Ntl2PuxuS/yU19L6
+            zUwXRm2gsKUYTfDipsz/nKYS4TWAtKwZ+6hcINKvAscuYLqj3Vo+y4SU/v0gxWpk
+            29FNbTDST+GeFs8lAITsTqMyrTu515vbJT29qRMB5L+3MMO+qPdM9EliHqydZ1Ns
+            z4ZOWFLmeB2O5dJ9h0Noe9sJzJ1e1/8b/Z1lpK9KPWMmK0gTCDMxGHtqEblJZ5Eu
+            PBB6mpWxtqUm/Gndq+bEfmQXlEseIqI8HCNQ+gbIM4njL602cL1kdHQfpK0AY0Iq
+            TAKkukPCTZ2lH8ji4Ks4KH/kwZfxuSgrThqLAKdECXel4Cr1y6826A7YmQqPZHb4
+            wPvCloDhlUD6kL0QR2mjnw8F70Q9vcwZ+9FYqW1ys79gCWBeo9U1ZujtRHXjnW0E
+            Y6XKRjuxdjNcgf9yEVqoumDPmMrfBq2/xY4wmA6KAnD2D7JsJPDG07H0eXLsPNBP
+            XOX9XRvRwF6SCIxaivwmJsMGgZAKc9q1SwZx0k+vXwOdVWNcudQ0oZHlmFfY0l1U
+            RzOksLsnHG3miU13gQmAjjX7aQbkRbCly6nHilb6b0D5qhlsbU6i4111pAgQn2D4
+            /VbqZ3OcVGjeB+uflCzCNtxhIG7h42MO3RPDnAbOg4ZF22JjZjURTjq6Fx1VDkzU
+            aAEJAhA4SDNQN6jVQ+gTyq4bnsljl7huI3FNEgz3I4ig4vtq6KGwB/ESmgj5Jw/H
+            c56w4A7sEjYG+Z4N5FUwPrVHuOfT7/5gebbFTrXNsENq0GWWgBlpJu+J3EJi/GTa
+            TYA2bjZL6r5/
+            =+1Wa
+            -----END PGP MESSAGE-----
+          fp: EA65B90F135CF8C5E331DA40C87A0BEB390664D3
+    encrypted_regex: ^(data|stringData)$
+    version: 3.11.0
+```
+4. Update the `kustomization.yaml` file (in this case `cluster-resources/services/podinfo/kustomization.yaml`) to include the secret file:
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - podinfo.yaml
+  - secret.yaml
+```
+5. Commit changes to the repository.
+
+### Configure cluster and Flux
+
+1. Export the private key and create a Kubernetes secret:
+```console
+gpg --export-secret-keys --armor $KEY_FP |
+kubectl create secret generic sops-gpg \
+--namespace=flux-system \
+--from-file=sops.asc=/dev/stdin
+```
+2. Update the Flux Kustomization manifest to enable SOPS decryption:
+```yaml
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: podinfo # name of the Kustomization resource for the application
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system # references the GitRepository resource defined in gotk-sync.yaml
+  path: ./cluster-resources/services/podinfo # path within the Git repository
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg
+```
+3. Commit changes and push to the repository
+4. Verify that the secret was automatically created:
+```console
+kubectl get secrets
+```
+Expected output:
+```
+NAME             TYPE     DATA   AGE
+podinfo-secret   Opaque   1      105s
+```
+5. Backup the cluster secret key to a password manager or other secure location:
+```console
+gpg --export-secret-keys --armor "${KEY_FP}"
+```
+6. Remove the secret key from your local machine:
+```console
+gpg --delete-secret-keys "${KEY_FP}"
+```
+
+!!!note 
+    **Security Note**: Before removing the cluster key, consider adding additional GPG keys for decryption and encryption on your development machines. The cluster secret key should be removed from personal computers since it is deployed in the flux-system namespace and used automatically for decryption.
+
 ## Summary
 
 This chapter demonstrates implementing a complete GitOps workflow using Flux. **For GitOps to work correctly, all Kustomization definitions that monitor infrastructure and services must be placed in the `flux/` directory**, while the actual resource definitions are organized separately in `infrastructure/` and `services/` directories. This separation allows Flux to automatically detect and apply changes from the Git repository to the cluster and allows user to store YAML files that will not be a part of GitOps workflow.
 
 The podinfo example in this chapter uses `GitRepository` and `Kustomization` for deployment, but it's important to note that exactly the same results can be achieved using `HelmRepository` and `HelmRelease` instead. The choice between these approaches depends on your use case: `GitRepository` is better suited for custom-made applications that reside in your repository and are not packaged as Helm charts, while the `HelmRepository` approach is often preferred for managing official Helm charts as it provides better versioning and configuration management capabilities. For example of using Helm to deploy PodInfo, refer to the [Flux Helm example repository](https://github.com/fluxcd/flux2-kustomize-helm-example).
 
+Additionally, this chapter covers secret management using [SOPS (Secrets OPerationS)](https://github.com/getsops/sops) for encrypting sensitive data before storing it in Git repositories, ensuring secure GitOps workflows.
+
 Sources:
 
-* [https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/](https://datavirke.dk/posts/bare-metal-kubernetes-part-1-talos-on-hetzner/)
 * [https://fluxcd.io/flux/concepts/](https://fluxcd.io/flux/concepts/)
 * [https://fluxcd.io/flux/guides/repository-structure/](https://fluxcd.io/flux/guides/repository-structure/)
 * [https://github.com/fluxcd/flux2-kustomize-helm-example](https://github.com/fluxcd/flux2-kustomize-helm-example)
 * [https://fluxcd.io/flux/cmd/flux_bootstrap_github/](https://fluxcd.io/flux/cmd/flux_bootstrap_github/)
 * [https://fluxcd.io/flux/components/kustomize/kustomizations/](https://fluxcd.io/flux/components/kustomize/kustomizations/)
 * [https://fluxcd.io/flux/components/source/gitrepositories/](https://fluxcd.io/flux/components/source/gitrepositories/)
+* [https://fluxcd.io/flux/guides/mozilla-sops/](https://fluxcd.io/flux/guides/mozilla-sops/)
+* [https://datavirke.dk/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/](https://datavirke.dk/posts/bare-metal-kubernetes-part-3-encrypted-gitops-with-fluxcd/)
