@@ -11,3 +11,7 @@ spec:
     kind: GitRepository
     name: flux-system # references the GitRepository resource defined in gotk-sync.yaml
   path: ./cluster-resources/services/podinfo # path within the Git repository
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg
