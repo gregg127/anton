@@ -117,6 +117,16 @@ To set up a server node, follow these steps:
 
 After completing the above steps, the cluster should be set up and ready to accept workers.
 
+!!!note
+    If you want to overwrite kubectl config based on the rendered talos configuration, you can use the following command:
+    ```console
+    talosctl kubeconfig \
+    --force \
+    --nodes $MASTER_IP \
+    --endpoints $MASTER_IP \
+    --talosconfig=rendered/talosconfig
+    ```
+
 ## Worker node setup
 
 Now that the cluster is set up with the *controlplane* node, it's time to add worker nodes:
@@ -149,7 +159,7 @@ Now that the cluster is set up with the *controlplane* node, it's time to add wo
     ```console
     kubectl get nodes -o=wide
     ```
-    6. Shut down the machine, remove the USB drive, and start the machine again.
+    6. Shut down the machine, remove the USB drive, and start it again.
     7. After some time, check if the node is in the **READY** status:
     ```console
     kubectl get nodes -o=wide
