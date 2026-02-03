@@ -23,7 +23,7 @@ data:
   DIFFICULTY: "2"
   LEVEL: "Anton MC"
   LEVEL_TYPE: "amplified"
-  ENABLE_WHITELIST: "true"
+  ENABLE_WHITELIST: "false" # !!!
   ENABLE_ROLLING_LOGS: "true"
   LOG_TIMESTAMP: "true"
   LOG_IPS: "false"
