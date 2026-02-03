@@ -34,7 +34,7 @@ spec:
               mountPath: /data
           ports:
             - containerPort: 25565
-              protocol: UDP
+              protocol: TCP
           #readinessProbe: &probe
           #  exec:
           #    command:

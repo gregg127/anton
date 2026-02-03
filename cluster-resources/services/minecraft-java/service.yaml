@@ -7,7 +7,7 @@ spec:
   selector:
     app: mc-java
   ports:
-    - protocol: UDP
+    - protocol: TCP
       port: 25565 
       nodePort: 30000
   type: NodePort
