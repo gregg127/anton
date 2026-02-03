@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: mc-java
+  name: mc-java
+spec:
+  replicas: 1 # never more than 1 since MC is not horizontally scalable
+  serviceName: mc-java
+  selector:
+    matchLabels:
+      app: mc-java
+  template:
+    metadata:
+      labels:
+        app: mc-java
+    spec:
+      containers:
+        - name: main
+          image: itzg/minecraft-server:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: mc-java-config
+          env:
+            - name: WHITELIST
+              valueFrom:
+                secretKeyRef:
+                  name: mc-java-secrets
+                  key: WHITELIST
+          volumeMounts:
+            - name: mc-java-volume
+              mountPath: /data
+          ports:
+            - containerPort: 25565
+              protocol: UDP
+          #readinessProbe: &probe
+          #  exec:
+          #    command:
+          #      - mc-monitor
+          #      - status-bedrock
+          #      - --host
+          #      # force health check against IPv4 port
+          #      - 127.0.0.1
+          #  initialDelaySeconds: 30
+          #livenessProbe: *probe
+          tty: true
+          stdin: true
+          #securityContext:
+          #  allowPrivilegeEscalation: false
+          #  capabilities:
+          #    drop:
+          #      - ALL
+          #  seccompProfile:
+          #    type: RuntimeDefault
+          #    runAsNonRoot: true
+      volumes:
+        - name: mc-java-volume
+          persistentVolumeClaim:
+            claimName: mc-java-pvc

@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mc-java-config
+  labels:
+    role: service-config
+    app: mc-java
+data:
+  EULA: "TRUE" # Must accept EULA to use this minecraft server
+  TYPE: "MODRINTH"
+  VERSION: "1.21.1"
+  MODRINTH_MODPACK: "https://modrinth.com/modpack/aetherplus"
+  MODRINTH_VERSION: "5"
+  MEMORY: "4096M"
+  MAX_PLAYERS: "10"
+  MOTD: "Hello :)"
+  USE_AIKAR_FLAGS: "true"
+  USE_MEOWICE_FLAGS: "true"
+  TZ: "Europe/Warsaw"
+  DIFFICULTY: "2"
+  LEVEL: "Anton MC"
+  LEVEL_TYPE: "amplified"
+  ENABLE_WHITELIST: "true"
+  ENABLE_ROLLING_LOGS: "true"
+  LOG_TIMESTAMP: "true"
+  LOG_IPS: "false"

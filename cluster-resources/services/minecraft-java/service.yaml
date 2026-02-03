@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mc-java
+spec:
+  selector:
+    app: mc-java
+  ports:
+    - protocol: UDP
+      port: 25565 
+      nodePort: 30000
+  type: NodePort
