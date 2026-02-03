@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: mc-java-aether
+  name: mc-java-aether
+spec:
+  replicas: 1 # never more than 1 since MC is not horizontally scalable
+  serviceName: mc-java-aether-service
+  selector:
+    matchLabels:
+      app: mc-java-aether
+  template:
+    metadata:
+      labels:
+        app: mc-java-aether
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsGroup: 1001
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: main
+          image: itzg/minecraft-server:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: mc-java-aether-config
+          env:
+            - name: WHITELIST
+              valueFrom:
+                secretKeyRef:
+                  name: mc-java-aether-secrets
+                  key: WHITELIST
+          volumeMounts:
+            - name: mc-java-aether-volume
+              mountPath: /data
+          ports:
+            - containerPort: 25565
+              protocol: TCP
+          tty: true
+          stdin: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: mc-java-aether-volume
+          persistentVolumeClaim:
+            claimName: mc-java-aether-pvc

@@ -2,11 +2,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mc-java-config
+  name: mc-java-aether-config
   labels:
     role: service-config
-    app: mc-java
+    app: mc-java-aether
 data:
+  UID: "1001"
+  GID: "1001"
   EULA: "TRUE" # Must accept EULA to use this minecraft server
   TYPE: "MODRINTH"
   VERSION: "1.21.1"
@@ -14,7 +16,7 @@ data:
   MODRINTH_VERSION: "5"
   MEMORY: "4096M"
   MAX_PLAYERS: "10"
-  MOTD: "Hello :)"
+  MOTD: "Anton MC Aether Plus"
   USE_AIKAR_FLAGS: "true"
   USE_MEOWICE_FLAGS: "true"
   TZ: "Europe/Warsaw"
