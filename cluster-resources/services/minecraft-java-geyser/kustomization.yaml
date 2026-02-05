@@ -7,3 +7,5 @@ resources:
 - configmap.yaml
 - statefulset.yaml
 - service.yaml
+- service-map.yaml
+- ingress-map.yaml
