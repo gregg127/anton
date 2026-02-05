@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mc-java-geyser-two-ingress-map
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - geyser.antoncluster.ovh
+      secretName: letsencrypt-prod-mc-java-geyser-two-map-tls-secret
+  rules:
+    - host: geyser2.antoncluster.ovh
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mc-java-geyser-two-service-map
+                port:
+                  number: 8080

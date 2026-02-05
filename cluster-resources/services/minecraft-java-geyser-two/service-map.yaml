@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mc-java-geyser-two-service-map
+spec:
+  selector:
+    app: mc-java-geyser-two
+  ports:
+    - name: minecraft-webmap
+      protocol: TCP
+      port: 8080
+      targetPort: 8080

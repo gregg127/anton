@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mc-java-geyser-two-service
+spec:
+  selector:
+    app: mc-java-geyser-two
+  ports:
+    - name: minecraft-java
+      protocol: TCP
+      port: 25565 
+      nodePort: 30003
+    - name: minecraft-bedrock
+      protocol: UDP
+      port: 19132
+      nodePort: 30004
+  type: NodePort

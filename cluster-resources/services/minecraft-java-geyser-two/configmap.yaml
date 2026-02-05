@@ -1,0 +1,37 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mc-java-geyser-two-config
+  labels:
+    role: service-config
+    app: mc-java-geyser-two
+data:
+  UID: "1001"
+  GID: "1001"
+  EULA: "TRUE" # Must accept EULA to use this minecraft server
+  TYPE: "PAPER"
+  VERSION: "1.21.11"
+  MEMORY: "4096M"
+  MAX_PLAYERS: "10"
+  MOTD: "Anton MC Geyser Two"
+  ENABLE_COMMAND_BLOCK: "true"
+  SPAWN_PROTECTION: "0"
+  USE_AIKAR_FLAGS: "true"
+  USE_MEOWICE_FLAGS: "true"
+  TZ: "Europe/Warsaw"
+  DIFFICULTY: "2"
+  LEVEL: "Anton MC Two"
+  ONLINE_MODE: "true"
+  ENABLE_WHITELIST: "true"
+  ENABLE_ROLLING_LOGS: "true"
+  LOG_TIMESTAMP: "true"
+  LOG_IPS: "false"
+  LEVEL_TYPE: "large_biomes"
+  PLUGINS: |-
+    https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
+    https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
+    https://github.com/ViaVersion/ViaVersion/releases/download/5.7.1/ViaVersion-5.7.1.jar
+    https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.15/bluemap-5.15-paper.jar
+    https://cdn.modrinth.com/data/kdfRxKkQ/versions/PUJlKJiu/chest-1.5.2.jar
+    https://cdn.modrinth.com/data/IAvnm8Mq/versions/rP3WDR32/VillagerInABukkit-paper-1.5.0.jar

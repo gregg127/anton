@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: mc-java-geyser-two
+  name: mc-java-geyser-two
+spec:
+  replicas: 1 # never more than 1 since MC is not horizontally scalable
+  serviceName: mc-java-geyser-two-service
+  selector:
+    matchLabels:
+      app: mc-java-geyser-two
+  template:
+    metadata:
+      labels:
+        app: mc-java-geyser-two
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsGroup: 1001
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: main
+          image: itzg/minecraft-server:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: mc-java-geyser-two-config
+          env:
+            - name: WHITELIST
+              valueFrom:
+                secretKeyRef:
+                  name: mc-java-geyser-two-secrets
+                  key: WHITELIST
+          volumeMounts:
+            - name: mc-java-geyser-two-volume
+              mountPath: /data
+          ports:
+            - containerPort: 25565
+              protocol: TCP
+            - containerPort: 19132
+              protocol: UDP
+            - containerPort: 8080
+              protocol: TCP
+          tty: true
+          stdin: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: mc-java-geyser-two-volume
+          persistentVolumeClaim:
+            claimName: mc-java-geyser-two-pvc
