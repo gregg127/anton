@@ -16,7 +16,7 @@ data:
   MAX_PLAYERS: "10"
   MOTD: "Anton MC Geyser Two"
   ENABLE_COMMAND_BLOCK: "true"
-  SPAWN_PROTECTION: "0"
+  SPAWN_PROTECTION: "16"
   USE_AIKAR_FLAGS: "true"
   USE_MEOWICE_FLAGS: "true"
   TZ: "Europe/Warsaw"
@@ -27,7 +27,8 @@ data:
   ENABLE_ROLLING_LOGS: "true"
   LOG_TIMESTAMP: "true"
   LOG_IPS: "false"
-  LEVEL_TYPE: "large_biomes"
+  # LEVEL_TYPE: "large_biomes"
+  SEED: "1691256543523180978"
   PLUGINS: |-
     https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
     https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
