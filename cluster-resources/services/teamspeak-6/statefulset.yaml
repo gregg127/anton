@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: teamspeak-6
+  name: teamspeak-6
+spec:
+  serviceName: teamspeak-6-service
+  selector:
+    matchLabels:
+      app: teamspeak-6
+  template:
+    metadata:
+      labels:
+        app: teamspeak-6
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsGroup: 1001
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: main
+          image: teamspeaksystems/teamspeak6-server:v6.0.0-beta8
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: teamspeak-6-config
+          volumeMounts:
+            - name: teamspeak-6-volume
+              mountPath: /var/tsserver
+          ports:
+            - containerPort: 9987 # voice port
+              protocol: UDP
+            - containerPort: 30033 # file transfer port
+              protocol: TCP
+            #- containerPort: 10080 # web query port
+            #  protocol: TCP
+          tty: true
+          stdin: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: teamspeak-6-volume
+          persistentVolumeClaim:
+            claimName: teamspeak-6-pvc

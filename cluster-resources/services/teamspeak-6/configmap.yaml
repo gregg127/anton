@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: teamspeak-6-config
+  labels:
+    role: service-config
+    app: teamspeak-6
+data:
+  TSSERVER_LICENSE_ACCEPTED: "accept"
+  TSSERVER_QUERY_HTTP_ENABLED: "0"
+  TSSERVER_QUERY_SSH_ENABLED: "0"
