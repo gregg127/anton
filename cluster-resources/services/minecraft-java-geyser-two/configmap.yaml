@@ -14,6 +14,8 @@ data:
   VERSION: "1.21.11"
   MEMORY: "4096M"
   MAX_PLAYERS: "10"
+  SIMULATION_DISTANCE: "16"
+  VIEW_DISTANCE: "24"
   MOTD: "Anton MC Geyser Two"
   ENABLE_COMMAND_BLOCK: "true"
   SPAWN_PROTECTION: "16"
@@ -29,10 +31,13 @@ data:
   LOG_IPS: "false"
   # LEVEL_TYPE: "large_biomes"
   SEED: "1691256543523180978"
+  RESOURCE_PACK: "https://cdn.modrinth.com/data/2YyNMled/versions/Y8mjFzcP/Dramatic Skys Demo 1.5.3.36.2.zip"
+  RESOURCE_PACK_ID: "b7a58deb-dcf8-36f7-b3af-ac7207180fae"
   PLUGINS: |-
     https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
     https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
     https://github.com/ViaVersion/ViaVersion/releases/download/5.7.1/ViaVersion-5.7.1.jar
     https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.15/bluemap-5.15-paper.jar
-    https://cdn.modrinth.com/data/kdfRxKkQ/versions/PUJlKJiu/chest-1.5.2.jar
     https://cdn.modrinth.com/data/IAvnm8Mq/versions/rP3WDR32/VillagerInABukkit-paper-1.5.0.jar
+    https://github.com/Artillex-Studios/AxGraves/releases/download/1.26.1/AxGraves-1.26.1.jar
+    https://hangarcdn.papermc.io/plugins/UrAvgCode/chestsort/versions/0.2.0/PAPER/chestsort-plus-0.2.0.jar
