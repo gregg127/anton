@@ -1,7 +1,9 @@
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: martialmatch-scraper-ingress
+  namespace: default
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
@@ -9,10 +11,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - bjj.golebiowski.dev
+        - goryle.pro
       secretName: letsencrypt-prod-martialmatch-scraper-tls-secret
   rules:
-    - host: bjj.golebiowski.dev
+    - host: goryle.pro 
       http:
         paths:
           - path: /
