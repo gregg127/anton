@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 VERSION=1.1
 IMAGE_NAME=harbor.golebiowski.dev/services/anton-docs
 
@@ -26,7 +27,7 @@ log "Pushing Docker image to remote registry..."
 docker push "$IMAGE_NAME:$VERSION"
 
 log "Updating version in kustomization..."
-sed -i '' "s|$IMAGE_NAME:.*|$IMAGE_NAME:$VERSION|" kustomization/deployment.yaml
+sed -i "s|$IMAGE_NAME:.*|$IMAGE_NAME:$VERSION|" kustomization/deployment.yaml
 
 log "Commiting version to the repostiory..."
 git add deploy-docs.sh
