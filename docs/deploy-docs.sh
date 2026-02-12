@@ -12,10 +12,17 @@ rm -rf site
 log "Building MkDocs site..."
 mkdocs build
 
-log "Building Docker image with version $VERSION..."
-docker build --platform linux/amd64,linux/arm64 --build-arg VERSION="$VERSION" -t "$IMAGE_NAME:$VERSION" -f Dockerfile .
+log "Building Docker image with version "$VERSION" using buildx..."
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --build-arg VERSION="$VERSION" \
+  --tag "$IMAGE_NAME:$VERSION" \
+  -f Dockerfile .
 
-log "Pushing Docker image to registry..."
+log "Loading Docker image into local Docker registry..."
+docker buildx build --load -t $IMAGE_NAME:$VERSION .
+
+log "Pushing Docker image to remote registry..."
 docker push "$IMAGE_NAME:$VERSION"
 
 log "Updating version in kustomization..."
