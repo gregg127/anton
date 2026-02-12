@@ -21,7 +21,7 @@ spec:
         fsGroup: 101
       containers:
         - name: anton-docs
-          image: harbor.golebiowski.dev/services/anton-docs:1.1
+          image: harbor.golebiowski.dev/services/anton-docs:1.2
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
