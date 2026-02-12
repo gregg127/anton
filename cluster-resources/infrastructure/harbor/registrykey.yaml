@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: harbor-registry-key
+    namespace: default
+data:
+    .dockerconfigjson: ENC[AES256_GCM,data:WnkGShTZtVD/DXSHgCWViDXPSQBXY51Pz5qdQTYpac1JWERx59xQTYrd0LQ/c/3kgoU+9O9WgzWtN6n9zQEyvO0EPMqT3mYYIk/AC63bUtyzik2x5ZoXDD9sfUz3igzqZu/L3Qyuvfw7r2C1gSSnIYTI1oTFlIq+TiXeyp7LuIsPg/VJRCzhCfIv03TvI5M5WgMg0UgpVyKaEYV2zAIXHnoyzTI4dQH+c4kA9sz9vo1AqB9m6Wl1Zw==,iv:GR/9uAQDtff5ImgDhUDc6kX1v2lGWligXjvTZGv/2jA=,tag:OAFJx0UiGc5jEGiby8IHXw==,type:str]
+type: kubernetes.io/dockerconfigjson
+sops:
+    lastmodified: "2026-02-12T15:47:13Z"
+    mac: ENC[AES256_GCM,data:xAjFMwDJ1uS4bfQBb1dQM5d8nr3FhTKVVxfC0ap/baUYrioVrUjluX1nDaeKry01XLF7xo9VbnnifzYoxIobGdUkfwdpMmNz4/eWeLKYE95ld9dDcmA7QRKVRj24MENHzgQPOgAcg/J95NlEarPzVfJOZlufoqaS4vyrMLaj/+w=,iv:0ONwhGIhr3+FVnsbt9Qhqs2XQ7SStErkSTejHju441w=,tag:UjNovVr40MQ4MEckF+3dtg==,type:str]
+    pgp:
+        - created_at: "2026-02-12T15:47:13Z"
+          enc: |-
+            -----BEGIN PGP MESSAGE-----
+
+            hQIMAwSeVs53q4TjAQ//cPdR1Za2RDL8RAMbNAevsxNBubtEyh5G3Lihdn12kdRS
+            6EN0cC2enhhTAJAg2T+wT2K/AcBzZXnU6hro6NATa3+R+JNHhnQLuUUSwNqyrX0c
+            db8DgBW4hYJvmy0wmq8fGi097maVgMdXewgAnFHEH+JWhMoVoHwpffS6b8Zt50Zg
+            G9IH5esExegfR7MAROZKm/WqD6m2IbzDa9OnrEc/HqDLgHry8zId9vLkQ1BOMYia
+            UZlrAipD+elnKgFZix4+M30t8CW95/P93fTozWzpXxZw5w7JkJYia7wDfkDq7qEs
+            LekKlW6pjU+hroP4j7zKIVHHoi16CW093ePS9E6nMPbKJs17VCosJdpRBEb0yEnQ
+            DBP77m9pODYzGqeM85R54yVMgFOzv88nRBlE9/nTgEvUXQFlUW8nUi1xfDHAGWop
+            49pbEY0Bggj72mx7DxqORVtQk/IApQFzMGZW6I7q5G1FVYeh1uUWXmHyrQo9XDPA
+            crAbabSkP5nVnvuAia/olyBg3QP3ue2Sh8kP6k26g1VIKz/uSg+RmDPOm0XUBMIs
+            iIJjCWYILbOIPRWmuvqNjeP8rNxA9GhIHDdWHlLgkX0p5AG2udLKcYEnk8kZ4JKm
+            vYpLMuJbdwVawtvEHLJ1As17d+7PPWiMOlP30D4M0WLg0WpeN7OzyIsFNHGtwlvU
+            aAEJAhAcaOEGhfmCuFJ3jU/zUF6eEOC3U+3FHfXLxfUMNPcbY1t7i530VXMq+hbf
+            cPqTjG25u6CbcTHEBikumykxBk7dafYfp+NUCGDlkC6odmdrApvPsR0ithhXIZAf
+            Njvte1SitoCq
+            =sIts
+            -----END PGP MESSAGE-----
+          fp: EA65B90F135CF8C5E331DA40C87A0BEB390664D3
+        - created_at: "2026-02-12T15:47:13Z"
+          enc: |-
+            -----BEGIN PGP MESSAGE-----
+
+            hF4D2q685yeOqr8SAQdA3dNbQaQgYkdqeJKxoPMbWd8ukg3cEqtV1MB9CXvM5Qgw
+            WT2A4GrMEKM8YoCI+urPsD9Cku6mlW61pMdREaTCqPgHDY0/0z+ZXZhTUIEJNYzi
+            1GgBCQIQ7bcI/VESfSmgD04DZGMVu86/t4x6MXnLTEn2YSS74Wt4+HaHTp/xROyP
+            rnjx6KjqQ/vb11AcsCN078fzRYTQIP6jGr+NBmaOd5txc6stdhFTB9KalbbEoHV3
+            oXZvj9VsqqU3Og==
+            =i8xJ
+            -----END PGP MESSAGE-----
+          fp: D25B7C5D2B5FE33FAB3EBF4BCB6E270ECA40D3A0
+    encrypted_regex: ^(data|stringData)$
+    version: 3.11.0

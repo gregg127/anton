@@ -1,0 +1,71 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: harbor-registry
+  namespace: harbor-registry
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: harbor
+      version: "1.18"
+      sourceRef:
+        kind: HelmRepository
+        name: harbor-registry
+        namespace: harbor-registry
+      interval: 1m
+  values:
+    # --- Global
+    externalURL: https://harbor.golebiowski.dev
+    updateStrategy:
+      type: Recreate
+    # --- Persistence
+    persistence:
+      persistentVolumeClaim:
+        registry:
+          existingClaim: harbor-registry-pvc
+        jobservice:
+          jobLog:
+            existingClaim: harbor-jobservice-pvc
+        database:
+          existingClaim: harbor-database-pvc
+        redis:
+          existingClaim: harbor-redis-pvc
+        trivy:
+          existingClaim: harbor-trivy-pvc
+    # --- Applications
+    portal:
+      replicas: 1
+      nodeSelector: 
+        kubernetes.io/hostname: worker1
+    core:
+      replicas: 1
+      nodeSelector: 
+        kubernetes.io/hostname: worker1
+    jobservice:
+      replicas: 1
+      nodeSelector: 
+        kubernetes.io/hostname: worker1
+    registry:
+      replicas: 1
+      nodeSelector: 
+        kubernetes.io/hostname: worker1
+    database:
+      internal:
+        nodeSelector: 
+          kubernetes.io/hostname: worker1
+    redis:
+      internal:
+        nodeSelector: 
+          kubernetes.io/hostname: worker1
+    # --- Exposure
+    exposureType: ingress
+    expose:
+      ingress:
+        className: nginx
+        hosts:
+          core: harbor.golebiowski.dev 
+  valuesFrom:
+    - kind: Secret
+      name: harbor-secrets
