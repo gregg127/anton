@@ -62,10 +62,18 @@ spec:
     # --- Exposure
     exposureType: ingress
     expose:
+      type: ingress
+      tls:
+        enabled: true
+        certSource: secret
+        secret:
+          secretName: harbor-tls
       ingress:
         className: nginx
         hosts:
-          core: harbor.golebiowski.dev 
+          core: harbor.golebiowski.dev
+    internalTLS:
+      enabled: false
   valuesFrom:
     - kind: Secret
       name: harbor-secrets
