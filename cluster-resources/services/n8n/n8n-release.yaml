@@ -1,0 +1,53 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: n8n-release
+  namespace: n8n
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: n8n
+      version: 1.16.29
+      sourceRef:
+        kind: HelmRepository
+        name: n8n-repository
+        namespace: n8n
+      interval: 1m
+  values:
+    log:
+      level: debug
+    db:
+      type: postgresdb
+    redis:
+      enabled: true
+    # main
+    main:
+      extraEnvVars:
+        N8N_LISTEN_ADDRESS: 0.0.0.0
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 512m
+          memory: 512Mi
+    # worker
+    worker:
+      extraEnvVars:
+        N8N_LISTEN_ADDRESS: 0.0.0.0
+      mode: queue
+      count: 3
+      waitMainNodeReady:
+        enable: true
+      resources:
+        requests:
+          cpu: 500m
+          memory: 250 Mi
+        limits:
+          cpu: 1000m
+          memory: 500 Mi
+  valuesFrom:
+    - kind: Secret
+      name: n8n-secrets
