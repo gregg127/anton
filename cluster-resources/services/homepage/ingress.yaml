@@ -10,8 +10,7 @@ metadata:
 spec:
   ingressClassName: nginx
   tls:
-    - hosts:
-        - golebiowski.dev
+    - hosts: [golebiowski.dev]
       secretName: letsencrypt-prod-homepage-tls-secret
   rules:
     - host: golebiowski.dev

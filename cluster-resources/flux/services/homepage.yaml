@@ -1,0 +1,13 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: homepage
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system  # references the GitRepository resource defined in gotk-sync.yaml
+  path: ./cluster-resources/services/homepage  # path within the Git repository
