@@ -9,7 +9,7 @@ spec:
   ports:
     - name: minecraft-java
       protocol: TCP
-      port: 25565 
+      port: 25565
       nodePort: 30001
     - name: minecraft-bedrock
       protocol: UDP

@@ -9,8 +9,7 @@ metadata:
 spec:
   ingressClassName: nginx
   tls:
-    - hosts:
-        - geyser.antoncluster.ovh
+    - hosts: [geyser.antoncluster.ovh]
       secretName: letsencrypt-prod-mc-java-geyser-map-tls-secret
   rules:
     - host: geyser.antoncluster.ovh
@@ -23,3 +22,4 @@ spec:
                 name: mc-java-geyser-service-map
                 port:
                   number: 8080
+
