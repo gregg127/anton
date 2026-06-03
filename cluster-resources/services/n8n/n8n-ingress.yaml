@@ -6,12 +6,12 @@ metadata:
   namespace: n8n
   annotations:
     kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-staging
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
   tls:
     - hosts: [n8n.golebiowski.dev]
-      secretName: letsencrypt-staging-anton-tls-secret
+      secretName: letsencrypt-prod-anton-tls-secret
   rules:
     - host: n8n.golebiowski.dev
       http:
@@ -22,4 +22,4 @@ spec:
               service:
                 name: n8n-service
                 port:
-                  number: 80
+                  number: 5678

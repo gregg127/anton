@@ -9,12 +9,15 @@ spec:
   chart:
     spec:
       chart: n8n
-      version: 1.16.29
+      version: 1.16.46
       sourceRef:
         kind: HelmRepository
         name: n8n-repository
         namespace: n8n
       interval: 1m
+  valuesFrom:
+    - kind: Secret
+      name: n8n-secrets
   values:
     log:
       level: debug
@@ -24,15 +27,30 @@ spec:
       enabled: true
     # main
     main:
+      editorBaseUrl: https://n8n.golebiowski.dev
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: http
+        initialDelaySeconds: 60
+        failureThreshold: 5
+        timeoutSeconds: 3
+      readinessProbe:
+        httpGet:
+          path: /healthz/readiness
+          port: http
+        initialDelaySeconds: 60
+        failureThreshold: 5
+        timeoutSeconds: 3
       extraEnvVars:
         N8N_LISTEN_ADDRESS: 0.0.0.0
       resources:
         requests:
-          cpu: 100m
-          memory: 128Mi
+          cpu: 200m
+          memory: 256Mi
         limits:
-          cpu: 512m
-          memory: 512Mi
+          cpu: 1024m
+          memory: 1024Mi
     # worker
     worker:
       extraEnvVars:
@@ -44,10 +62,7 @@ spec:
       resources:
         requests:
           cpu: 500m
-          memory: 250 Mi
+          memory: 250Mi
         limits:
           cpu: 1000m
-          memory: 500 Mi
-  valuesFrom:
-    - kind: Secret
-      name: n8n-secrets
+          memory: 500Mi
