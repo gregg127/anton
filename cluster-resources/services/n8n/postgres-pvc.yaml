@@ -6,7 +6,7 @@ metadata:
   namespace: n8n
   annotations:
     volumeType: local
-    volume.kubernetes.io/selected-node: worker1
+    volume.kubernetes.io/selected-node: worker3
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: local-path

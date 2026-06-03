@@ -27,6 +27,19 @@ spec:
           envFrom:
             - secretRef:
                 name: postgres-secrets
+          args:
+            - -c
+            - log_connections=on
+            - -c
+            - log_disconnections=on
+            - -c
+            - log_hostname=on
+            - -c
+            - tcp_keepalives_idle=120
+            - -c
+            - tcp_keepalives_interval=10
+            - -c
+            - tcp_keepalives_count=5
           ports:
             - containerPort: 5432
           securityContext:
