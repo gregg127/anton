@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - gitea-secrets.yaml
+  - postgres-secrets.yaml
+  - postgres-pvc.yaml
+  - postgres.yaml
+  - postgres-service.yaml
+  - gitea-repository.yaml
+  - gitea-release.yaml
+  - gitea-service.yaml
+  - gitea-ingress.yaml

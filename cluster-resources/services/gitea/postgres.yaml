@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: gitea
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres
+          image: postgres:18
+          env:
+            - name: PGDATA
+              value: /mnt/data/postgres
+          envFrom:
+            - secretRef:
+                name: postgres-secrets
+          args:
+            - -c
+            - log_connections=on
+            - -c
+            - log_disconnections=on
+            - -c
+            - log_hostname=on
+            - -c
+            - tcp_keepalives_idle=120
+            - -c
+            - tcp_keepalives_interval=10
+            - -c
+            - tcp_keepalives_count=5
+          ports:
+            - containerPort: 5432
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: postgres-volume
+              mountPath: /mnt/data/postgres
+      volumes:
+        - name: postgres-volume
+          persistentVolumeClaim:
+            claimName: postgres-pvc
