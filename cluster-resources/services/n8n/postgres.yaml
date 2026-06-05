@@ -15,15 +15,14 @@ spec:
         app: postgres
     spec:
       securityContext:
-        runAsNonRoot: true
-        runAsGroup: 1001
-        runAsUser: 1001
-        fsGroup: 1001
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: postgres
           image: postgres:18
+          env:
+            - name: PGDATA
+              value: /mnt/data/postgres
           envFrom:
             - secretRef:
                 name: postgres-secrets
@@ -44,8 +43,6 @@ spec:
             - containerPort: 5432
           securityContext:
             allowPrivilegeEscalation: false
-            capabilities:
-              drop: [ALL]
           volumeMounts:
             - name: postgres-volume
               mountPath: /mnt/data/postgres
