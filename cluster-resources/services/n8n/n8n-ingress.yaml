@@ -23,3 +23,10 @@ spec:
                 name: n8n-service
                 port:
                   number: 5678
+          - path: /webhook
+            pathType: Prefix
+            backend:
+              service:
+                name: n8n-release-webhook
+                port:
+                  number: 5678
