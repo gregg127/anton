@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
         - name: ddns
-          image: qmcgaw/ddns-updater:v2.8
+          image: qmcgaw/ddns-updater:v2.10
           envFrom:
             - secretRef:
                 name: ddns-updater-config
@@ -25,8 +26,7 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
-              drop:
-                - ALL
+              drop: [ALL]
             seccompProfile:
               type: RuntimeDefault
             runAsNonRoot: true
