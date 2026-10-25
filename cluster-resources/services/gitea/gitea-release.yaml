@@ -9,15 +9,12 @@ spec:
   chart:
     spec:
       chart: gitea
-      version: '>=v12.6.0 <13.0.0'
+      version: ">=v12.7.0 <13.0.0"
       sourceRef:
         kind: HelmRepository
         name: gitea
         namespace: gitea
       interval: 1m
-  valuesFrom:
-    - kind: Secret
-      name: gitea-secrets
   values:
     service:
       http:
@@ -27,8 +24,10 @@ spec:
         port: 22
         type: ClusterIP
     gitea:
+      admin:
+        existingSecret: gitea-admin-secret
       config:
-        APP_NAME: Private Gitea
+        APP_NAME: Gitea
         server:
           DOMAIN: gitea.golebiowski.dev
           DISABLE_SSH: true
@@ -37,10 +36,19 @@ spec:
         database:
           DB_TYPE: postgres
           HOST: postgres-headless
+          NAME: gitea-gg
+          USER: gitea-gg
+          SCHEMA: public
         service:
           DISABLE_REGISTRATION: true
           REGISTER_MANUAL_CONFIRM: true
           DEFAULT_USER_IS_RESTRICTED: true
+      additionalConfigFromEnvs:
+        - name: GITEA__DATABASE__PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: gitea-db-secret
+              key: password
     persistence:
       enabled: false
     postgresql:
