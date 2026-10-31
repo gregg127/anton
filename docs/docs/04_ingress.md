@@ -1,5 +1,8 @@
 # Ingress, DNS, Cloudflare, certification
 
+!!!warning
+    This chapter is partially out of date. I migrated from the Nginx Ingress Controller to the Gateway API with Envoy Gateway and MetalLB, which is described in the [Gateway API, Envoy Gateway, MetalLB](06_gateway_api.md) chapter. The `Ingress` routing, `hostNetwork` setup and `Ingress`-based certificate issuing below no longer apply. The domain, Cloudflare and Dynamic DNS configuration didn't change.
+
 After many experiments, research and considering that I am working with a **bare metal** cluster, I made the following decisions for external cluster accessibility:
 
 * Routing will be done with `Ingress` manifests.

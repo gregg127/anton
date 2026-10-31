@@ -1,5 +1,8 @@
 # Network Setup
 
+!!!warning
+    This chapter is partially out of date. The cluster now works with MetalLB in L2 mode, which is described in the [Gateway API, Envoy Gateway, MetalLB](06_gateway_api.md) chapter. The cluster router no longer forwards traffic to the control plane machine, as described in the port forwarding sections below. NAT rules for ports `80` and `443` now point to `192.168.10.30`, a fixed virtual IP address of the load balancer. It isn't tied to one machine: one node answers for it at a time, and another one takes over if that node fails. The rest of the network configuration didn't change.
+
 ## Overview
 
 This documentation outlines the network configuration for a cluster setup using a dual-router architecture. The network topology consists of:
@@ -75,6 +78,9 @@ Test the configuration by connecting a computer to the cluster switch and perfor
 ## Final Configuration Steps
 
 ### Port Forwarding Setup
+
+!!!warning
+    This is no longer the current setup. NAT rules on the cluster router now forward ports `80` and `443` to `192.168.10.30`, the virtual IP address of the load balancer, instead of the control plane machine. See the [Gateway API, Envoy Gateway, MetalLB](06_gateway_api.md) chapter.
 
 Add a NAT rule on the cluster router to forward port 80 traffic to port 80 of the cluster control plane machine.
 
