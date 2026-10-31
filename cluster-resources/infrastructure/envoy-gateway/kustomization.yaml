@@ -1,0 +1,12 @@
+# https://gateway.envoyproxy.io/docs/install/install-flux/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - repository.yaml
+  - release.yaml
+  - gateway-class.yaml
+  - envoy-proxy.yaml
+  - certificate-homepage.yaml
+  - gateway.yaml
+  - httpsredirect.yaml

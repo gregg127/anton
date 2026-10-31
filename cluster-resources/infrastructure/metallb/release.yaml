@@ -1,0 +1,53 @@
+# helmrelease-metallb.yaml - MetalLB deployment via Flux
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: metallb
+  namespace: metallb-system
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: metallb
+      version: "0.x"
+      sourceRef:
+        kind: HelmRepository
+        name: metallb
+        namespace: metallb-system
+      interval: 15m
+  install:
+    createNamespace: false
+    timeout: 10m
+    remediation:
+      retries: 3
+    crds: CreateReplace
+  upgrade:
+    timeout: 10m
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      strategy: rollback
+    crds: CreateReplace
+  values:
+    # Controller deployment configuration
+    controller:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 128Mi
+    # Speaker DaemonSet configuration
+    speaker:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 128Mi
+      # Tolerate control-plane nodes if needed
+      tolerations: []
+      # Use memberlist for speaker communication
+      secretName: metallb-memberlist

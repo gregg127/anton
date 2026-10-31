@@ -16,5 +16,9 @@ spec:
     # Enable the HTTP-01 challenge provider
     solvers:
       - http01:
-          ingress:
-            class: nginx
+          gatewayHTTPRoute:
+            parentRefs:
+              - name: envoy-gateway
+                namespace: envoy-gateway-system
+                kind: Gateway
+                sectionName: http

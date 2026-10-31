@@ -1,0 +1,31 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: envoy-gateway
+  namespace: envoy-gateway-system
+spec:
+  gatewayClassName: envoy-gateway-class
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: envoy-proxy
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https-homepage
+      protocol: HTTPS
+      port: 443
+      hostname: golebiowski.dev
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: letsencrypt-prod-homepage-tls-secret
+      allowedRoutes:
+        namespaces:
+          from: All
+
