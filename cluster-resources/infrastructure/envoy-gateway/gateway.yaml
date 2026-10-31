@@ -39,4 +39,14 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-
+    - name: https-gitea
+      protocol: HTTPS
+      port: 443
+      hostname: gitea.golebiowski.dev
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: letsencrypt-prod-gitea-tls-secret
+      allowedRoutes:
+        namespaces:
+          from: All

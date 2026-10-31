@@ -30,6 +30,7 @@ spec:
         APP_NAME: Gitea
         server:
           DOMAIN: gitea.golebiowski.dev
+          ROOT_URL: https://gitea.golebiowski.dev
           DISABLE_SSH: true
         session:
           SAME_SITE: strict

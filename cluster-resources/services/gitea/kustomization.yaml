@@ -12,4 +12,4 @@ resources:
   - gitea-repository.yaml
   - gitea-release.yaml
   - gitea-service.yaml
-  - gitea-ingress.yaml
+  - gitea-httproute.yaml
