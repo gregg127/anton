@@ -29,6 +29,9 @@ spec:
       strategy: rollback
     crds: CreateReplace
   values:
+    # FRR is only used in BGP mode, this cluster uses L2 mode
+    frrk8s:
+      enabled: false
     # Controller deployment configuration
     controller:
       resources:
