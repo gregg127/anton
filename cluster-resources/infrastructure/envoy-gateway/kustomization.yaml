@@ -8,5 +8,6 @@ resources:
   - gateway-class.yaml
   - envoy-proxy.yaml
   - certificate-homepage.yaml
+  - certificate-harbor.yaml
   - gateway.yaml
   - httpsredirect.yaml

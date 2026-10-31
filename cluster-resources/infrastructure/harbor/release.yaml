@@ -60,18 +60,15 @@ spec:
         nodeSelector: 
           kubernetes.io/hostname: worker1
     # --- Exposure
-    exposureType: ingress
     expose:
-      type: ingress
+      type: clusterIP
       tls:
-        enabled: true
-        certSource: secret
-        secret:
-          secretName: harbor-tls
-      ingress:
-        className: nginx
-        hosts:
-          core: harbor.golebiowski.dev
+        enabled: false
+      clusterIP:
+        name: harbor
+    nginx:
+      nodeSelector:
+        kubernetes.io/hostname: worker1
     internalTLS:
       enabled: false
   valuesFrom:

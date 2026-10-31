@@ -28,4 +28,15 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: https-harbor
+      protocol: HTTPS
+      port: 443
+      hostname: harbor.golebiowski.dev
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: harbor-tls
+      allowedRoutes:
+        namespaces:
+          from: All
 
